@@ -2,6 +2,7 @@ import './components/FloatingButton.js';
 import './components/ServiceTable.js';
 import './components/Modal.js';
 import './components/DataViewModal.js';
+import './components/CoverageVerification.js';
 
 // Create the ShadowWidgets API
 const ShadowWidgets = {
@@ -76,6 +77,109 @@ const ShadowWidgets = {
       }
     });
     return { modal, button };
+  },
+
+  createCoverageVerificationWithButton(buttonOptions = {}) {
+    // Create a container for the coverage verification popup
+    const container = document.createElement('div');
+    container.id = 'coverage-verification-container';
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 9999;
+      overflow-y: auto;
+      padding: 2rem;
+      box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      justify-content: center;
+      align-items: flex-start;
+    `;
+    
+    // Create the coverage verification component
+    const coverageVerification = document.createElement('coverage-verification');
+    coverageVerification.style.cssText = `
+      margin: 0 auto;
+      width: 100%;
+      max-width: 1200px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    `;
+
+    container.appendChild(coverageVerification);
+    document.body.appendChild(container);
+
+    // Create the floating button with specific text and icon
+    const button = this.createFloatingButton({
+      position: 'bottom-right',
+      glowing: true,
+      ...buttonOptions
+    });
+
+    // Set the button content
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <span>Verify Coverage</span>
+    `;
+
+    const showPopup = () => {
+      container.style.display = 'flex';
+      // Force a reflow before adding opacity
+      container.offsetHeight;
+      container.style.opacity = '1';
+      coverageVerification.style.opacity = '1';
+      coverageVerification.style.transform = 'translateY(0)';
+      document.body.style.overflow = 'hidden';
+    };
+
+    const hidePopup = () => {
+      container.style.opacity = '0';
+      coverageVerification.style.opacity = '0';
+      coverageVerification.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        container.style.display = 'none';
+        document.body.style.overflow = '';
+      }, 300);
+    };
+
+    // Wire up the button click to show the popup
+    button.addEventListener('click', showPopup);
+
+    // Add click handler to close on background click
+    container.addEventListener('click', (e) => {
+      if (e.target === container) {
+        hidePopup();
+      }
+    });
+
+    // Listen for the close event from the component
+    coverageVerification.addEventListener('close', hidePopup);
+
+    // Add escape key handler
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && container.style.display === 'flex') {
+        hidePopup();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+
+    // Cleanup function
+    const cleanup = () => {
+      document.removeEventListener('keydown', handleEscape);
+      container.remove();
+      button.remove();
+    };
+
+    return { container, button, coverageVerification, cleanup };
   }
 };
 

@@ -10,12 +10,17 @@ const componentStyles = css`
   :host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   }
 
   .wrapper {
     background: white;
     border-radius: 0.75rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    position: relative;
   }
 
   .header {
@@ -29,6 +34,36 @@ const componentStyles = css`
     align-items: center;
     border-top-left-radius: 0.75rem;
     border-top-right-radius: 0.75rem;
+    position: relative;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .close-button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke: currentColor;
+    stroke-width: 2;
   }
 
   .nphies-logo {
@@ -687,6 +722,11 @@ export class CoverageVerification extends LitElement {
         <div class="header">
           Coverage Eligibility Verification Center
           <img src="${nphiesLogo}" class="nphies-logo" alt="NPHIES">
+          <button class="close-button" @click="${this.handleClose}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         
         <div class="tabs">
@@ -746,6 +786,15 @@ export class CoverageVerification extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  handleClose() {
+    const event = new CustomEvent('close', {
+      bubbles: true,
+      composed: true,
+      detail: { source: 'close-button' }
+    });
+    this.dispatchEvent(event);
   }
 }
 
