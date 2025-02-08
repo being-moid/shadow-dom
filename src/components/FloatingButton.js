@@ -17,6 +17,14 @@ const componentStyles = css`
     left: 2rem;
   }
 
+  :host([position='bottom-right']:not(:first-of-type)) {
+    bottom: 6rem;
+  }
+
+  :host([position='bottom-left']:not(:first-of-type)) {
+    bottom: 6rem;
+  }
+
   button {
     background: #463AA1;
     color: white;
@@ -106,6 +114,7 @@ export class FloatingButton extends LitElement {
 
   _handleClick(e) {
     if (!this.disabled) {
+      console.log('Button clicked');
       this.dispatchEvent(new CustomEvent('click', {
         bubbles: true,
         composed: true,
