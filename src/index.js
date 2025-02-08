@@ -8,15 +8,24 @@ import './components/ServiceTable.js';
 import './components/Modal.js';
 import './components/FloatingButton.js';
 import './components/CoverageVerification.js';
+import './components/PriorAuthVerification.js';
 
 // Import and export ShadowWidgets API
 import { ShadowWidgets } from './shadow-widgets.js';
 
-// Initialize the coverage verification widget
+// Initialize both widgets with different positions
 const coverageVerification = ShadowWidgets.createCoverageVerificationWithButton({
   position: 'bottom-right',
   glowing: true
 });
+
+// Add a small delay to ensure proper positioning
+setTimeout(() => {
+  const priorAuth = ShadowWidgets.createPriorAuthWithButton({
+    position: 'bottom-right',
+    glowing: true
+  });
+}, 100);
 
 // Export helpers and widgets
 export { ShadowWidgets };
