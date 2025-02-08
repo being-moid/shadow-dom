@@ -103,14 +103,43 @@ const componentStyles = css`
     color: #6B7280;
     font-weight: 500;
   }
+
+  /* New loader and no-results styles */
+  .loader-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .loader {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #F3F4F6;
+    border-top: 2px solid #463AA1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .no-results {
+    padding: 0.75rem 1.25rem;
+    text-align: center;
+    color: #6B7280;
+    font-size: 0.875rem;
+  }
 `;
 
 export class PatientSearch extends LitElement {
   static get properties() {
     return {
-      value: { type: String },
-      results: { type: Array },
-      isOpen: { type: Boolean }
+      searchQuery: { type: String },
+      suggestions: { type: Array },
+      isLoading: { type: Boolean }
     };
   }
 
@@ -120,38 +149,97 @@ export class PatientSearch extends LitElement {
 
   constructor() {
     super();
-    this.value = '';
-    this.results = [];
-    this.isOpen = false;
+    this.searchQuery = '';
+    this.suggestions = [];
+    this.isLoading = false;
   }
 
-  handleInput(e) {
-    this.value = e.target.value;
-    // Mock search results - replace with actual API call
-    if (this.value) {
-      this.results = [
-        {
-          mrn: '36616',
-          name: 'WALEED AL RASHED',
-          nationalId: '200000000009',
-          mobile: '966561922084'
+  async handleInputChange(e) {
+    this.searchQuery = e.target.value.trim();
+    if (this.searchQuery.length >= 3) {
+      this.isLoading = true;
+      try {
+        const response = await fetch('https://localhost:7006/api/PatientPatientInformation/getpagedasync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filters: `(pinNo|firstName|middleName|lastName|nic|cellPhoneNo)_=${this.searchQuery}`,
+            page: 1,
+            pageSize: 50
+          })
+        });
+        const result = await response.json();
+        if (result && result.dynamicResult) {
+          this.suggestions = result.dynamicResult.map(p => ({
+            mrn: p.pinNo,
+            name: [p.firstName, p.middleName, p.lastName].filter(part => part && part.trim() !== '').join(' '),
+            nationalId: p.nic,
+            mobile: p.cellPhoneNo,
+            fullData: p
+          }));
+        } else {
+          this.suggestions = [];
         }
-      ];
-      this.isOpen = true;
+      } catch (error) {
+        console.error('Error fetching patients:', error);
+        this.suggestions = [];
+      } finally {
+        this.isLoading = false;
+      }
     } else {
-      this.results = [];
-      this.isOpen = false;
+      this.suggestions = [];
+      this.isLoading = false;
     }
+    this.requestUpdate();
   }
 
-  handleSelect(patient) {
+  selectPatient(patient) {
+    const fullPatientData = patient.fullData;
+    const patientInsurance = fullPatientData.patientInsurances && fullPatientData.patientInsurances.length > 0 
+      ? fullPatientData.patientInsurances[0] 
+      : null;
+
+    const insuranceDetails = patientInsurance ? {
+      company: patientInsurance.payer?.companyName || 'N/A',
+      contractNumber: patientInsurance.memberId || 'N/A',
+      memberID: patientInsurance.memberId || 'N/A',
+      policyNumber: patientInsurance.memberId || 'N/A',
+      coveragePlan: patientInsurance.fkPlan?.planName || 'N/A',
+      planDetails: patientInsurance.fkPlan || null,
+      contractDetails: patientInsurance.fkPlan?.fkContract || null
+    } : null;
+
+    const coverageDetails = {
+      type: patientInsurance ? 'Primary' : 'Self Pay',
+      dependent: 'No',
+      relationship: patientInsurance?.fkRelationId === 1 ? 'Self' : 'Other',
+      startDate: patientInsurance?.startDate || 'N/A',
+      endDate: patientInsurance?.expiryDate || 'N/A',
+      payorReference: patientInsurance?.payerId || 'N/A',
+      groupNumber: patientInsurance?.workCompanyId || 'N/A',
+      groupName: insuranceDetails?.contractDetails?.contractName || 'N/A',
+      planNumber: patientInsurance?.fkPlanId || 'N/A',
+      planName: insuranceDetails?.planDetails?.planName || 'N/A',
+      network: 'In-Network',
+      subrogation: 'Not Covered',
+      lastEligibilityVerificationDate: fullPatientData.insuranceCoverages?.length > 0 
+        ? fullPatientData.insuranceCoverages[0].lastEligiblityVerifcationDate 
+        : null
+    };
+
     this.dispatchEvent(new CustomEvent('patient-selected', {
-      detail: patient,
+      detail: {
+        ...patient,
+        insuranceInfo: insuranceDetails,
+        coverageDetails: coverageDetails,
+        patientType: fullPatientData.patientType?.patientTypeName || 'Self Pay'
+      },
       bubbles: true,
       composed: true
     }));
-    this.value = patient.name;
-    this.isOpen = false;
+
+    this.searchQuery = '';
+    this.suggestions = [];
   }
 
   render() {
@@ -160,21 +248,31 @@ export class PatientSearch extends LitElement {
         <input
           type="text"
           class="search-input"
-          placeholder="Search Patient using MRN#, ID/IQAMA, PASSPORT#"
-          .value="${this.value}"
-          @input="${this.handleInput}"
+          placeholder="Search by patient PIN..."
+          .value="${this.searchQuery}"
+          @input="${this.handleInputChange}"
         >
-        ${this.isOpen && this.results.length ? html`
+        ${this.searchQuery.length >= 3 ? html`
           <div class="dropdown">
-            ${this.results.map(patient => html`
-              <div class="search-result" @click="${() => this.handleSelect(patient)}">
-                <div class="result-info">
-                  <span class="result-title">${patient.name}</span>
-                  <span class="result-subtitle">MRN: ${patient.mrn}</span>
-                </div>
-                <span class="result-id">ID: ${patient.nationalId}</span>
-              </div>
-            `)}
+            ${this.isLoading
+              ? html`
+                  <div class="loader-container">
+                    <div class="loader"></div>
+                    <span>Loading...</span>
+                  </div>
+                `
+              : this.suggestions.length
+                ? html`${this.suggestions.map(patient => html`
+                    <div class="search-result" @click="${() => this.selectPatient(patient)}">
+                      <div class="result-info">
+                        <span class="result-title">${patient.name}</span>
+                        <span class="result-subtitle">MRN: ${patient.mrn}</span>
+                      </div>
+                      <span class="result-id">ID: ${patient.nationalId}</span>
+                    </div>
+                  `)}
+                `
+                : html``}
           </div>
         ` : null}
       </div>

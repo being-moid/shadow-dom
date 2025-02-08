@@ -388,6 +388,86 @@ const componentStyles = css`
   .map-benefits-button:hover {
     background: #047857;
   }
+
+  .back-button {
+    margin: 1rem 2rem;
+    padding: 0.5rem 1rem;
+    background: #F3F4F6;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  .verification-form {
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .form-section {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+  }
+
+  .form-section h4 {
+    margin: 0 0 1rem 0;
+    color: #111827;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .input-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .input-group input,
+  .input-group select {
+    padding: 0.5rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #111827;
+  }
+
+  .input-group input:focus,
+  .input-group select:focus {
+    outline: none;
+    border-color: #463AA1;
+    box-shadow: 0 0 0 3px rgba(70, 58, 161, 0.1);
+  }
+
+  .secondary-button {
+    background: #F3F4F6;
+    color: #374151;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .secondary-button:hover {
+    background: #E5E7EB;
+  }
 `;
 
 export class CoverageVerification extends LitElement {
@@ -402,7 +482,16 @@ export class CoverageVerification extends LitElement {
       serviceTypes: { type: Array },
       mappedBenefits: { type: Object },
       availableBenefits: { type: Array },
-      isMappingComplete: { type: Boolean }
+      isMappingComplete: { type: Boolean },
+      providerInfo: { type: Object },
+      locationInfo: { type: Object },
+      servicePeriod: { type: Object },
+      facilities: { type: Array },
+      insuranceCompanies: { type: Array },
+      selectedFacility: { type: Object },
+      selectedInsuranceCompany: { type: Object },
+      isManualMode: { type: Boolean },
+      manualFormData: { type: Object }
     };
   }
 
@@ -467,6 +556,108 @@ export class CoverageVerification extends LitElement {
       network: 'In-Network',
       subrogation: 'Not Covered'
     };
+
+    // Initialize new properties with default values
+    this.providerInfo = {
+      licenseNumber: 'PR-FHIR',
+      name: 'Saudi General Clinic',
+      type: '5',
+      active: true
+    };
+    
+    this.locationInfo = {
+      licenseNumber: 'GACH',
+      name: 'Test Provider',
+      active: true
+    };
+
+    this.servicePeriod = {
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString().split('T')[0] + 'T23:59:59'
+    };
+
+    // Initialize new properties
+    this.facilities = [];
+    this.insuranceCompanies = [];
+    this.selectedFacility = null;
+    this.selectedInsuranceCompany = null;
+    this.isManualMode = false;
+    this.manualFormData = {
+      organizationLicenseNumber: '',
+      locationLicenseNumber: '',
+      insuranceLicenseNumber: '',
+      occupation: '',
+      maritalStatus: ''
+    };
+
+    // Load facilities and insurance companies
+    this.loadFacilities();
+    this.loadInsuranceCompanies();
+  }
+
+  async loadFacilities() {
+    try {
+      const response = await fetch('https://localhost:7006/api/buildingmanagementfacility/getpagedasync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filters: '',
+          page: 1,
+          pageSize: 10
+        })
+      });
+      const result = await response.json();
+      if (result.isSuccessfull) {
+        this.facilities = result.dynamicResult;
+      }
+    } catch (error) {
+      console.error('Error loading facilities:', error);
+    }
+  }
+
+  async loadInsuranceCompanies() {
+    try {
+      const response = await fetch('https://localhost:7006/api/insurancecompany/getpagedasync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filters: '',
+          page: 1,
+          pageSize: 1000
+        })
+      });
+      const result = await response.json();
+      if (result.isSuccessfull) {
+        this.insuranceCompanies = result.dynamicResult;
+      }
+    } catch (error) {
+      console.error('Error loading insurance companies:', error);
+    }
+  }
+
+  handleFacilityChange(e) {
+    const facilityId = e.target.value;
+    this.selectedFacility = this.facilities.find(f => f.id === parseInt(facilityId));
+    this.requestUpdate();
+  }
+
+  handleInsuranceCompanyChange(e) {
+    const companyId = e.target.value;
+    this.selectedInsuranceCompany = this.insuranceCompanies.find(c => c.id === parseInt(companyId));
+    this.requestUpdate();
+  }
+
+  toggleManualMode() {
+    this.isManualMode = !this.isManualMode;
+    this.requestUpdate();
+  }
+
+  handleManualInputChange(e) {
+    const { name, value } = e.target;
+    this.manualFormData = {
+      ...this.manualFormData,
+      [name]: value
+    };
   }
 
   handlePatientSelected(e) {
@@ -479,10 +670,28 @@ export class CoverageVerification extends LitElement {
 
   async handleVerify() {
     this.isVerifying = true;
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    this.isVerifying = false;
-    this.isVerified = true;
+    
+    try {
+      const payload = this.prepareVerificationPayload();
+      console.log('Verification Payload:', payload);
+      
+      // TODO: Add actual API call here
+      // const response = await fetch('verification-endpoint', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(payload)
+      // });
+      
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      this.isVerified = true;
+    } catch (error) {
+      console.error('Verification failed:', error);
+      // TODO: Add error handling UI
+    } finally {
+      this.isVerifying = false;
+    }
   }
 
   startBenefitMapping() {
@@ -507,6 +716,12 @@ export class CoverageVerification extends LitElement {
     return mappedBenefits.reduce((sum, benefit) => sum + benefit.allowed, 0);
   }
 
+  handleBack() {
+    this.selectedPatient = null;
+    this.isVerified = false;
+    this.isMappingComplete = false;
+  }
+
   renderPatientInfo() {
     if (!this.selectedPatient) return null;
 
@@ -525,7 +740,21 @@ export class CoverageVerification extends LitElement {
               <img src="${userIcon}" class="user-icon" alt="">
               PATIENT TYPE
             </div>
-            <div class="field-value">SELF PAY</div>
+            <div class="field-value">${this.selectedPatient.patientType}</div>
+          </div>
+          <div class="info-field">
+            <div class="field-label">
+              <img src="${userIcon}" class="user-icon" alt="">
+              NATIONAL ID
+            </div>
+            <div class="field-value">${this.selectedPatient.nationalId}</div>
+          </div>
+          <div class="info-field">
+            <div class="field-label">
+              <img src="${userIcon}" class="user-icon" alt="">
+              MOBILE
+            </div>
+            <div class="field-value">${this.selectedPatient.mobile}</div>
           </div>
         </div>
         <div class="images-container">
@@ -537,6 +766,21 @@ export class CoverageVerification extends LitElement {
   }
 
   renderInsuranceInfo() {
+    const insuranceInfo = this.selectedPatient?.insuranceInfo;
+    if (!insuranceInfo) {
+      return html`
+        <div class="section-header">
+          <h3 class="section-title">INSURANCE INFORMATION</h3>
+        </div>
+        <div class="insurance-grid">
+          <div class="info-field">
+            <div class="field-label">STATUS</div>
+            <div class="field-value">SELF PAY</div>
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="section-header">
         <h3 class="section-title">INSURANCE INFORMATION</h3>
@@ -554,32 +798,57 @@ export class CoverageVerification extends LitElement {
           <div class="field-label">INSURANCE COMPANY</div>
           <div class="company-info">
             <img class="company-icon" alt="">
-            <div class="field-value">${this.insuranceInfo.company}</div>
+            <div class="field-value">${insuranceInfo.company}</div>
           </div>
         </div>
         <div class="info-field">
           <div class="field-label">CONTRACT#</div>
-          <div class="field-value">${this.insuranceInfo.contractNumber}</div>
+          <div class="field-value">${insuranceInfo.contractNumber}</div>
         </div>
         <div class="info-field">
           <div class="field-label">MEMBER ID</div>
-          <div class="field-value">${this.insuranceInfo.memberID}</div>
+          <div class="field-value">${insuranceInfo.memberID}</div>
         </div>
         <div class="info-field">
           <div class="field-label">POLICY#</div>
-          <div class="field-value">${this.insuranceInfo.policyNumber}</div>
+          <div class="field-value">${insuranceInfo.policyNumber}</div>
         </div>
         <div class="info-field">
           <div class="field-label">INSURANCE COVERAGE PLAN</div>
-          <div class="field-value">${this.insuranceInfo.coveragePlan}</div>
+          <div class="field-value">${insuranceInfo.coveragePlan}</div>
         </div>
+        ${insuranceInfo.planDetails ? html`
+          <div class="info-field">
+            <div class="field-label">PLAN CATEGORY</div>
+            <div class="field-value">${insuranceInfo.planDetails.planCategory || 'N/A'}</div>
+          </div>
+          <div class="info-field">
+            <div class="field-label">PLAN CODE</div>
+            <div class="field-value">${insuranceInfo.planDetails.planCode || 'N/A'}</div>
+          </div>
+          <div class="info-field">
+            <div class="field-label">ANNUAL LIMIT</div>
+            <div class="field-value">${insuranceInfo.planDetails.annualLimit || 'N/A'}</div>
+          </div>
+        ` : null}
+        ${insuranceInfo.contractDetails ? html`
+          <div class="info-field">
+            <div class="field-label">CONTRACT NAME</div>
+            <div class="field-value">${insuranceInfo.contractDetails.contractName || 'N/A'}</div>
+          </div>
+          <div class="info-field">
+            <div class="field-label">CONTRACT DATE</div>
+            <div class="field-value">${insuranceInfo.contractDetails.contractDate || 'N/A'}</div>
+          </div>
+        ` : null}
       </div>
     `;
   }
 
   renderCoverageDetails() {
-    if (!this.isVerified) return null;
+    if (!this.isVerified || !this.selectedPatient?.coverageDetails) return null;
 
+    const coverageDetails = this.selectedPatient.coverageDetails;
     return html`
       <div class="section-header">
         <h3 class="section-title">COVERAGE DETAILS</h3>
@@ -587,52 +856,58 @@ export class CoverageVerification extends LitElement {
       <div class="coverage-details-grid">
         <div class="info-field">
           <div class="field-label">TYPE</div>
-          <div class="field-value">${this.coverageDetails.type}</div>
+          <div class="field-value">${coverageDetails.type}</div>
         </div>
         <div class="info-field">
           <div class="field-label">DEPENDENT</div>
-          <div class="field-value">${this.coverageDetails.dependent}</div>
+          <div class="field-value">${coverageDetails.dependent}</div>
         </div>
         <div class="info-field">
           <div class="field-label">RELATIONSHIP</div>
-          <div class="field-value">${this.coverageDetails.relationship}</div>
+          <div class="field-value">${coverageDetails.relationship}</div>
         </div>
         <div class="info-field">
           <div class="field-label">START DATE</div>
-          <div class="field-value">${this.coverageDetails.startDate}</div>
+          <div class="field-value">${coverageDetails.startDate}</div>
         </div>
         <div class="info-field">
           <div class="field-label">END DATE</div>
-          <div class="field-value">${this.coverageDetails.endDate}</div>
+          <div class="field-value">${coverageDetails.endDate}</div>
         </div>
         <div class="info-field">
           <div class="field-label">PAYOR REFERENCE</div>
-          <div class="field-value">${this.coverageDetails.payorReference}</div>
+          <div class="field-value">${coverageDetails.payorReference}</div>
         </div>
         <div class="info-field">
           <div class="field-label">GROUP NUMBER</div>
-          <div class="field-value">${this.coverageDetails.groupNumber}</div>
+          <div class="field-value">${coverageDetails.groupNumber}</div>
         </div>
         <div class="info-field">
           <div class="field-label">GROUP NAME</div>
-          <div class="field-value">${this.coverageDetails.groupName}</div>
+          <div class="field-value">${coverageDetails.groupName}</div>
         </div>
         <div class="info-field">
           <div class="field-label">PLAN NUMBER</div>
-          <div class="field-value">${this.coverageDetails.planNumber}</div>
+          <div class="field-value">${coverageDetails.planNumber}</div>
         </div>
         <div class="info-field">
           <div class="field-label">PLAN NAME</div>
-          <div class="field-value">${this.coverageDetails.planName}</div>
+          <div class="field-value">${coverageDetails.planName}</div>
         </div>
         <div class="info-field">
           <div class="field-label">NETWORK</div>
-          <div class="field-value">${this.coverageDetails.network}</div>
+          <div class="field-value">${coverageDetails.network}</div>
         </div>
         <div class="info-field">
           <div class="field-label">SUBROGATION</div>
-          <div class="field-value">${this.coverageDetails.subrogation}</div>
+          <div class="field-value">${coverageDetails.subrogation}</div>
         </div>
+        ${coverageDetails.lastEligibilityVerificationDate ? html`
+          <div class="info-field">
+            <div class="field-label">LAST ELIGIBILITY CHECK</div>
+            <div class="field-value">${new Date(coverageDetails.lastEligibilityVerificationDate).toLocaleDateString()}</div>
+          </div>
+        ` : null}
       </div>
     `;
   }
@@ -716,6 +991,145 @@ export class CoverageVerification extends LitElement {
     `;
   }
 
+  renderVerificationForm() {
+    const hasInsurance = this.selectedPatient?.insuranceInfo;
+    const facility = this.selectedFacility;
+    
+    return html`
+      <div class="verification-form">
+        <div class="form-section">
+          <h4>Facility Information</h4>
+          <div class="form-group">
+            <label>Select Facility</label>
+            <select @change="${this.handleFacilityChange}">
+              <option value="">Select a facility...</option>
+              ${this.facilities.map(f => html`
+                <option value="${f.id}">${f.facilityName}</option>
+              `)}
+            </select>
+          </div>
+          
+          ${facility && (!facility.lisenceNo || !facility.dhausername) ? html`
+            <div class="form-group">
+              ${!facility.lisenceNo ? html`
+                <div class="input-group">
+                  <label>Organization License Number</label>
+                  <input 
+                    type="text"
+                    name="organizationLicenseNumber"
+                    .value="${this.manualFormData.organizationLicenseNumber}"
+                    @input="${this.handleManualInputChange}"
+                  >
+                </div>
+              ` : null}
+              ${!facility.dhausername ? html`
+                <div class="input-group">
+                  <label>Location License Number</label>
+                  <input 
+                    type="text"
+                    name="locationLicenseNumber"
+                    .value="${this.manualFormData.locationLicenseNumber}"
+                    @input="${this.handleManualInputChange}"
+                  >
+                </div>
+              ` : null}
+            </div>
+          ` : null}
+        </div>
+
+        <div class="form-section">
+          <h4>Insurance Information</h4>
+          ${hasInsurance && !this.isManualMode ? html`
+            <div class="form-group">
+              <label>Using existing insurance: ${this.selectedPatient.insuranceInfo.company}</label>
+              <button @click="${this.toggleManualMode}" class="secondary-button">
+                Use Different Insurance
+              </button>
+            </div>
+          ` : html`
+            <div class="form-group">
+              <label>Select Insurance Company</label>
+              <select @change="${this.handleInsuranceCompanyChange}">
+                <option value="">Select an insurance company...</option>
+                ${this.insuranceCompanies.map(c => html`
+                  <option value="${c.id}">${c.companyName}</option>
+                `)}
+              </select>
+            </div>
+          `}
+
+          ${(this.isManualMode || !hasInsurance) && this.selectedInsuranceCompany ? html`
+            <div class="form-group">
+              ${!this.selectedInsuranceCompany.licenseNumber ? html`
+                <div class="input-group">
+                  <label>Insurance License Number</label>
+                  <input 
+                    type="text"
+                    name="insuranceLicenseNumber"
+                    .value="${this.manualFormData.insuranceLicenseNumber}"
+                    @input="${this.handleManualInputChange}"
+                  >
+                </div>
+              ` : null}
+            </div>
+          ` : null}
+        </div>
+
+        <div class="form-section">
+          <h4>Additional Patient Information</h4>
+          <div class="form-group">
+            <div class="input-group">
+              <label>Occupation</label>
+              <input 
+                type="text"
+                name="occupation"
+                .value="${this.manualFormData.occupation}"
+                @input="${this.handleManualInputChange}"
+                placeholder="Required for verification"
+              >
+            </div>
+            <div class="input-group">
+              <label>Marital Status</label>
+              <select 
+                name="maritalStatus"
+                .value="${this.manualFormData.maritalStatus}"
+                @change="${this.handleManualInputChange}"
+              >
+                <option value="">Select status...</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>Service Period</h4>
+          <div class="form-group">
+            <div class="input-group">
+              <label>Start Date</label>
+              <input 
+                type="datetime-local"
+                .value="${this.servicePeriod.startDate.split('.')[0]}"
+                @change="${(e) => this.updateServicePeriod(e.target.value, this.servicePeriod.endDate)}"
+              >
+            </div>
+            <div class="input-group">
+              <label>End Date</label>
+              <input 
+                type="datetime-local"
+                .value="${this.servicePeriod.endDate.split('.')[0]}"
+                @change="${(e) => this.updateServicePeriod(this.servicePeriod.startDate, e.target.value)}"
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     return html`
       <div class="wrapper">
@@ -747,15 +1161,16 @@ export class CoverageVerification extends LitElement {
             </div>
           ` : html`
             <div class="animate-in">
+              <button class="back-button" @click="${this.handleBack}">Back to Search</button>
               ${this.activeTab === 'coverage' ? html`
                 ${this.renderPatientInfo()}
                 ${this.renderInsuranceInfo()}
-                ${this.renderCoverageDetails()}
+                ${this.renderVerificationForm()}
                 ${!this.isVerified ? html`
                   <button 
                     class="verify-button" 
                     @click="${this.handleVerify}"
-                    ?disabled="${this.isVerifying}"
+                    ?disabled="${this.isVerifying || !this.selectedFacility}"
                   >
                     ${this.isVerifying ? html`
                       <div class="loader"></div>
@@ -795,6 +1210,57 @@ export class CoverageVerification extends LitElement {
       detail: { source: 'close-button' }
     });
     this.dispatchEvent(event);
+  }
+
+  prepareVerificationPayload() {
+    if (!this.selectedPatient || !this.selectedFacility) return null;
+
+    const patientData = this.selectedPatient.fullData;
+    const names = this.selectedPatient.name.split(' ');
+    const insuranceCompany = this.isManualMode ? this.selectedInsuranceCompany : 
+                           (this.selectedPatient?.insuranceInfo ? { companyName: this.selectedPatient.insuranceInfo.company } : this.selectedInsuranceCompany);
+    
+    return {
+      PatientInfo: {
+        Id: patientData.pinNo,
+        IqamaId: patientData.nic,
+        FullName: this.selectedPatient.name,
+        FamilyName: patientData.lastName || names[names.length - 1],
+        GivenNames: [
+          patientData.firstName || names[0],
+          patientData.middleName || (names.length > 2 ? names.slice(1, -1).join(' ') : '')
+        ].filter(Boolean),
+        PhoneNumber: patientData.cellPhoneNo,
+        Gender: patientData.gender?.genderName || 'Unknown',
+        BirthDate: patientData.dateOfBirth,
+        Occupation: this.manualFormData.occupation || 'Unknown',
+        MaritalStatus: this.manualFormData.maritalStatus || patientData.maritalStatus?.status || 'Unknown'
+      },
+      ProviderInfo: {
+        LicenseNumber: this.selectedFacility.lisenceNo || this.manualFormData.organizationLicenseNumber,
+        Name: this.selectedFacility.facilityName,
+        Type: this.selectedFacility.facilityType.toString(),
+        Active: true
+      },
+      InsurerInfo: {
+        LicenseNumber: insuranceCompany?.licenseNumber || this.manualFormData.insuranceLicenseNumber || 'INS-FHIR',
+        Name: insuranceCompany?.companyName || 'Unknown',
+        Active: true
+      },
+      LocationInfo: {
+        LicenseNumber: this.selectedFacility.dhausername || this.manualFormData.locationLicenseNumber || 'GACH',
+        Name: this.selectedFacility.facilityName,
+        Active: true
+      },
+      ServicePeriod: this.servicePeriod
+    };
+  }
+
+  updateServicePeriod(startDate, endDate) {
+    this.servicePeriod = {
+      startDate: startDate || new Date().toISOString(),
+      endDate: endDate || new Date().toISOString().split('T')[0] + 'T23:59:59'
+    };
   }
 }
 
