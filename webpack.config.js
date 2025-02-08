@@ -12,7 +12,8 @@ module.exports = {
       umdNamedDefine: true
     },
     globalObject: 'this',
-    publicPath: '/'
+    publicPath: 'auto',
+    assetModuleFilename: 'assets/[hash][ext][query]'
   },
   module: {
     rules: [
@@ -52,6 +53,9 @@ module.exports = {
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
+        generator: {
+          filename: 'images/[hash][ext][query]'
+        }
       },
     ],
   },
@@ -81,5 +85,5 @@ module.exports = {
       '@styles': path.resolve(__dirname, 'src/styles/')
     }
   },
-  mode: 'development'
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
 }; 
