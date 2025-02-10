@@ -1,0 +1,217 @@
+{
+  "serviceTypes": [
+    {
+      "id": 1,
+      "name": "E & M Codes",
+      "code": "EM",
+      "services": [
+        {
+          "id": "EM001",
+          "name": "Initial Office Visit",
+          "description": "New patient office consultation",
+          "defaultAllowed": 150
+        },
+        {
+          "id": "EM002",
+          "name": "Follow-up Visit",
+          "description": "Established patient follow-up",
+          "defaultAllowed": 100
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "CPT Services",
+      "code": "CPT",
+      "services": [
+        {
+          "id": "CPT001",
+          "name": "Basic Medical Procedure",
+          "description": "Standard medical procedure",
+          "defaultAllowed": 200
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Laboratory",
+      "code": "LAB",
+      "services": [
+        {
+          "id": "LAB001",
+          "name": "Complete Blood Count",
+          "description": "CBC blood test",
+          "defaultAllowed": 150
+        },
+        {
+          "id": "LAB002",
+          "name": "Basic Metabolic Panel",
+          "description": "BMP blood test",
+          "defaultAllowed": 180
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Radiology",
+      "code": "RAD",
+      "services": [
+        {
+          "id": "RAD001",
+          "name": "Chest X-Ray",
+          "description": "Standard chest radiograph",
+          "defaultAllowed": 300
+        },
+        {
+          "id": "RAD002",
+          "name": "CT Scan",
+          "description": "Computed tomography scan",
+          "defaultAllowed": 800
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Dental",
+      "code": "DEN",
+      "services": [
+        {
+          "id": "DEN001",
+          "name": "Dental Cleaning",
+          "description": "Routine dental prophylaxis",
+          "defaultAllowed": 250
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "HCPCS",
+      "code": "HCP",
+      "services": [
+        {
+          "id": "HCP001",
+          "name": "Medical Equipment",
+          "description": "Durable medical equipment",
+          "defaultAllowed": 500
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Room & Board",
+      "code": "RNB",
+      "services": [
+        {
+          "id": "RNB001",
+          "name": "Standard Room",
+          "description": "Standard hospital room per day",
+          "defaultAllowed": 1000
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Pharmacy",
+      "code": "PHR",
+      "services": [
+        {
+          "id": "PHR001",
+          "name": "Prescription Medication",
+          "description": "Standard prescription drugs",
+          "defaultAllowed": 200
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "HA Service Codes",
+      "code": "HAS",
+      "services": [
+        {
+          "id": "HAS001",
+          "name": "Home Health Visit",
+          "description": "Home health aide service",
+          "defaultAllowed": 400
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "DRG",
+      "code": "DRG",
+      "services": [
+        {
+          "id": "DRG001",
+          "name": "Standard DRG",
+          "description": "Diagnosis Related Group",
+          "defaultAllowed": 2000
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Kitchen Services",
+      "code": "KIT",
+      "services": [
+        {
+          "id": "KIT001",
+          "name": "Special Diet Meal",
+          "description": "Customized patient meal",
+          "defaultAllowed": 100
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Endoscopy",
+      "code": "END",
+      "services": [
+        {
+          "id": "END001",
+          "name": "Basic Endoscopy",
+          "description": "Standard endoscopic procedure",
+          "defaultAllowed": 1200
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Orthodontic",
+      "code": "ORT",
+      "services": [
+        {
+          "id": "ORT001",
+          "name": "Orthodontic Consultation",
+          "description": "Initial orthodontic evaluation",
+          "defaultAllowed": 300
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Maternity",
+      "code": "MAT",
+      "services": [
+        {
+          "id": "MAT001",
+          "name": "Prenatal Visit",
+          "description": "Routine prenatal checkup",
+          "defaultAllowed": 250
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Surgical Packages",
+      "code": "SUR",
+      "services": [
+        {
+          "id": "SUR001",
+          "name": "Minor Surgery Package",
+          "description": "Basic surgical procedure package",
+          "defaultAllowed": 3000
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import './components/ServiceTable.js';
 import './components/Modal.js';
 import './components/DataViewModal.js';
 import './components/CoverageVerification.js';
+import './components/PriorAuthClaimManagement.js';
 
 // Create the ShadowWidgets API
 const ShadowWidgets = {
@@ -16,6 +17,9 @@ const ShadowWidgets = {
     }
     if (typeof options.disabled !== 'undefined') {
       btn.disabled = options.disabled;
+    }
+    if (options.type) {
+      btn.type = options.type;
     }
     document.body.appendChild(btn);
     return btn;
@@ -91,7 +95,7 @@ const ShadowWidgets = {
       height: 100vh;
       background: rgba(0, 0, 0, 0.5);
       display: none;
-      z-index: 9999;
+      z-index: 9998;
       overflow-y: auto;
       padding: 2rem;
       box-sizing: border-box;
@@ -110,6 +114,8 @@ const ShadowWidgets = {
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s ease;
+      position: relative;
+      z-index: 9998;
     `;
 
     container.appendChild(coverageVerification);
@@ -122,14 +128,6 @@ const ShadowWidgets = {
       ...buttonOptions
     });
 
-    // Set the button content
-    button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-      <span>Verify Coverage</span>
-    `;
-
     const showPopup = () => {
       container.style.display = 'flex';
       // Force a reflow before adding opacity
@@ -138,7 +136,15 @@ const ShadowWidgets = {
       coverageVerification.style.opacity = '1';
       coverageVerification.style.transform = 'translateY(0)';
       document.body.style.overflow = 'hidden';
+      
+      // Dispatch event to switch to coverage tab and show patient search
+      coverageVerification.dispatchEvent(new CustomEvent('switch-tab', {
+        detail: { tab: 'coverage' }
+      }));
     };
+
+    // Wire up the button click to show the popup
+    button.addEventListener('click', showPopup);
 
     const hidePopup = () => {
       container.style.opacity = '0';
@@ -149,9 +155,6 @@ const ShadowWidgets = {
         document.body.style.overflow = '';
       }, 300);
     };
-
-    // Wire up the button click to show the popup
-    button.addEventListener('click', showPopup);
 
     // Add click handler to close on background click
     container.addEventListener('click', (e) => {
@@ -182,10 +185,10 @@ const ShadowWidgets = {
     return { container, button, coverageVerification, cleanup };
   },
 
-  createPriorAuthWithButton(buttonOptions = {}) {
-    // Create a container for the prior auth popup
+  createPriorAuthClaimManagementWithButton(buttonOptions = {}) {
+    // Create a container for the prior auth & claim management popup
     const container = document.createElement('div');
-    container.id = 'prior-auth-container';
+    container.id = 'prior-auth-claim-management-container';
     container.style.cssText = `
       position: fixed;
       top: 0;
@@ -194,7 +197,7 @@ const ShadowWidgets = {
       height: 100vh;
       background: rgba(0, 0, 0, 0.5);
       display: none;
-      z-index: 9999;
+      z-index: 9998;
       overflow-y: auto;
       padding: 2rem;
       box-sizing: border-box;
@@ -204,74 +207,67 @@ const ShadowWidgets = {
       align-items: flex-start;
     `;
     
-    // Create the prior auth verification component
-    const priorAuthVerification = document.createElement('prior-auth-verification');
-    priorAuthVerification.style.cssText = `
+    // Create the prior auth & claim management component
+    const priorAuthClaimManagement = document.createElement('prior-auth-claim-management');
+    priorAuthClaimManagement.style.cssText = `
       margin: 0 auto;
       width: 100%;
       max-width: 1200px;
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s ease;
+      position: relative;
+      z-index: 9998;
     `;
 
-    container.appendChild(priorAuthVerification);
+    container.appendChild(priorAuthClaimManagement);
     document.body.appendChild(container);
 
     // Create the floating button
     const button = this.createFloatingButton({
-      position: 'bottom-right',
-      glowing: true,
-      ...buttonOptions
+      position: buttonOptions.position || 'bottom-right',
+      glowing: buttonOptions.glowing !== undefined ? buttonOptions.glowing : true,
+      type: 'prior-auth',
+      ...buttonOptions,
+      // Ensure type is not overridden by buttonOptions spread
+      type: 'prior-auth'
     });
-
-    // Position the button slightly above the coverage button
-    button.style.bottom = '6rem';
-
-    // Set the button content
-    button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-          d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" 
-        />
-      </svg>
-      <span>Prior Authorization</span>
-    `;
 
     const showPopup = () => {
       container.style.display = 'flex';
-      // Force a reflow
-      container.offsetHeight;
-      container.style.opacity = '1';
-      priorAuthVerification.style.opacity = '1';
-      priorAuthVerification.style.transform = 'translateY(0)';
+      requestAnimationFrame(() => {
+        container.style.opacity = '1';
+        priorAuthClaimManagement.style.opacity = '1';
+        priorAuthClaimManagement.style.transform = 'translateY(0)';
+      });
       document.body.style.overflow = 'hidden';
+      
+      // Dispatch event to switch to prior-auth tab
+      priorAuthClaimManagement.dispatchEvent(new CustomEvent('switch-tab', {
+        detail: { tab: 'prior-auth' }
+      }));
     };
+
+    button.addEventListener('click', showPopup);
 
     const hidePopup = () => {
       container.style.opacity = '0';
-      priorAuthVerification.style.opacity = '0';
-      priorAuthVerification.style.transform = 'translateY(20px)';
+      priorAuthClaimManagement.style.opacity = '0';
+      priorAuthClaimManagement.style.transform = 'translateY(20px)';
       setTimeout(() => {
         container.style.display = 'none';
         document.body.style.overflow = '';
       }, 300);
     };
 
-    // Wire up the button click to show the popup
-    button.addEventListener('click', showPopup);
-
-    // Add click handler to close on background click
     container.addEventListener('click', (e) => {
       if (e.target === container) {
         hidePopup();
       }
     });
 
-    // Listen for the close event from the component
-    priorAuthVerification.addEventListener('close', hidePopup);
+    priorAuthClaimManagement.addEventListener('close', hidePopup);
 
-    // Add escape key handler
     const handleEscape = (e) => {
       if (e.key === 'Escape' && container.style.display === 'flex') {
         hidePopup();
@@ -280,14 +276,13 @@ const ShadowWidgets = {
 
     document.addEventListener('keydown', handleEscape);
 
-    // Cleanup function
     const cleanup = () => {
       document.removeEventListener('keydown', handleEscape);
       container.remove();
       button.remove();
     };
 
-    return { container, button, priorAuthVerification, cleanup };
+    return { container, button, priorAuthClaimManagement, cleanup };
   }
 };
 

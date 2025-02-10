@@ -1,6 +1,8 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import searchIcon from '../styles/search.svg';
+import { customElement } from 'lit/decorators.js';
+import API_ENDPOINTS from '@config/api.js';
 
 const componentStyles = css`
   :host {
@@ -11,10 +13,11 @@ const componentStyles = css`
   .search-container {
     position: relative;
     width: 100%;
+  
   }
 
   .search-input {
-    width: 100%;
+    width: 67rem;
     padding: 1.25rem 1rem 1.25rem 3rem;
     border: 1px solid #E5E7EB;
     border-radius: 0.5rem;
@@ -26,6 +29,7 @@ const componentStyles = css`
     background-position: 1rem center;
     background-size: 1.25rem;
     transition: all 0.2s ease;
+    margin-bottom: 1rem;
   }
 
   .search-input:focus {
@@ -39,7 +43,7 @@ const componentStyles = css`
   }
 
   .dropdown {
-    position: absolute;
+
     top: calc(100% + 0.5rem);
     left: 0;
     right: 0;
@@ -50,7 +54,6 @@ const componentStyles = css`
     z-index: 100;
     max-height: 16rem;
     overflow-y: auto;
-    width: 100%;
   }
 
   .search-result {
@@ -134,6 +137,7 @@ const componentStyles = css`
   }
 `;
 
+@customElement('patient-search')
 export class PatientSearch extends LitElement {
   static get properties() {
     return {
@@ -159,7 +163,7 @@ export class PatientSearch extends LitElement {
     if (this.searchQuery.length >= 3) {
       this.isLoading = true;
       try {
-        const response = await fetch('https://localhost:7006/api/PatientPatientInformation/getpagedasync', {
+        const response = await fetch(API_ENDPOINTS.PATIENT.PAGED, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -171,6 +175,7 @@ export class PatientSearch extends LitElement {
         const result = await response.json();
         if (result && result.dynamicResult) {
           this.suggestions = result.dynamicResult.map(p => ({
+            ...p,
             mrn: p.pinNo,
             name: [p.firstName, p.middleName, p.lastName].filter(part => part && part.trim() !== '').join(' '),
             nationalId: p.nic,
@@ -199,6 +204,9 @@ export class PatientSearch extends LitElement {
       ? fullPatientData.patientInsurances[0] 
       : null;
 
+    // Simple NPHIES verification - only check if insuranceCoverages exists and has items
+    const isNphiesVerified = fullPatientData.insuranceCoverages && fullPatientData.insuranceCoverages.length > 0;
+
     const insuranceDetails = patientInsurance ? {
       company: patientInsurance.payer?.companyName || 'N/A',
       contractNumber: patientInsurance.memberId || 'N/A',
@@ -206,7 +214,8 @@ export class PatientSearch extends LitElement {
       policyNumber: patientInsurance.memberId || 'N/A',
       coveragePlan: patientInsurance.fkPlan?.planName || 'N/A',
       planDetails: patientInsurance.fkPlan || null,
-      contractDetails: patientInsurance.fkPlan?.fkContract || null
+      contractDetails: patientInsurance.fkPlan?.fkContract || null,
+      isNphiesEnabled: patientInsurance.payer?.isNphiesEnabled || false
     } : null;
 
     const coverageDetails = {
@@ -224,7 +233,8 @@ export class PatientSearch extends LitElement {
       subrogation: 'Not Covered',
       lastEligibilityVerificationDate: fullPatientData.insuranceCoverages?.length > 0 
         ? fullPatientData.insuranceCoverages[0].lastEligiblityVerifcationDate 
-        : null
+        : null,
+      isNphiesVerified: isNphiesVerified
     };
 
     this.dispatchEvent(new CustomEvent('patient-selected', {
@@ -232,7 +242,9 @@ export class PatientSearch extends LitElement {
         ...patient,
         insuranceInfo: insuranceDetails,
         coverageDetails: coverageDetails,
-        patientType: fullPatientData.patientType?.patientTypeName || 'Self Pay'
+        patientType: fullPatientData.patientType?.patientTypeName || 'Self Pay',
+        isNphiesVerified: isNphiesVerified,
+        insuranceCoverages: fullPatientData.insuranceCoverages || []
       },
       bubbles: true,
       composed: true
@@ -278,8 +290,4 @@ export class PatientSearch extends LitElement {
       </div>
     `;
   }
-}
-
-if (!customElements.get('patient-search')) {
-  customElements.define('patient-search', PatientSearch);
 } 

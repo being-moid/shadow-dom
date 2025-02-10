@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   entry: './src/index.js',
@@ -23,7 +24,11 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env']
+            presets: ['@babel/preset-env'],
+            plugins: [
+              ['@babel/plugin-proposal-decorators', { legacy: true }],
+              ['@babel/plugin-proposal-class-properties', { loose: true }]
+            ]
           }
         }
       },
@@ -64,6 +69,7 @@ module.exports = {
       template: './src/index.html',
       inject: 'body'
     }),
+    new Dotenv()
   ],
   devServer: {
     static: {
@@ -82,7 +88,8 @@ module.exports = {
     extensions: ['.js'],
     alias: {
       '@components': path.resolve(__dirname, 'src/components/'),
-      '@styles': path.resolve(__dirname, 'src/styles/')
+      '@styles': path.resolve(__dirname, 'src/styles/'),
+      '@config': path.resolve(__dirname, 'src/config/')
     }
   },
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
