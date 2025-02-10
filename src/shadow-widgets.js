@@ -5,6 +5,36 @@ import './components/DataViewModal.js';
 import './components/CoverageVerification.js';
 import './components/PriorAuthClaimManagement.js';
 
+const modalContentStyles = `
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 2rem;
+`;
+
+const modalActionStyles = `
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 2rem;
+  background: white;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+const modalWrapperStyles = `
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+`;
+
 // Create the ShadowWidgets API
 const ShadowWidgets = {
   createFloatingButton(options) {
@@ -83,8 +113,13 @@ const ShadowWidgets = {
     return { modal, button };
   },
 
-  createCoverageVerificationWithButton(buttonOptions = {}) {
-    // Create a container for the coverage verification popup
+  createCoverageVerificationWithButton(options = {}) {
+    const btn = this.createFloatingButton({
+      ...options,
+      position: 'bottom-right-1',
+      type: 'coverage'
+    });
+
     const container = document.createElement('div');
     container.id = 'coverage-verification-container';
     container.style.cssText = `
@@ -96,7 +131,6 @@ const ShadowWidgets = {
       background: rgba(0, 0, 0, 0.5);
       display: none;
       z-index: 9998;
-      overflow-y: auto;
       padding: 2rem;
       box-sizing: border-box;
       opacity: 0;
@@ -105,28 +139,47 @@ const ShadowWidgets = {
       align-items: flex-start;
     `;
     
-    // Create the coverage verification component
     const coverageVerification = document.createElement('coverage-verification');
     coverageVerification.style.cssText = `
       margin: 0 auto;
       width: 100%;
       max-width: 1200px;
+      height: calc(100vh - 4rem);
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s ease;
       position: relative;
       z-index: 9998;
+      background: white;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     `;
 
+    // Create a wrapper for the entire modal content
+    const modalWrapper = document.createElement('div');
+    modalWrapper.style.cssText = modalWrapperStyles;
+
+    // Add styles to the content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.style.cssText = modalContentStyles;
+    
+    // Move the content into the wrapper
+    while (coverageVerification.firstChild) {
+      contentWrapper.appendChild(coverageVerification.firstChild);
+    }
+
+    // Add the action buttons container
+    const actionContainer = document.createElement('div');
+    actionContainer.style.cssText = modalActionStyles;
+
+    // Assemble the modal structure
+    modalWrapper.appendChild(contentWrapper);
+    modalWrapper.appendChild(actionContainer);
+    coverageVerification.appendChild(modalWrapper);
     container.appendChild(coverageVerification);
     document.body.appendChild(container);
-
-    // Create the floating button with specific text and icon
-    const button = this.createFloatingButton({
-      position: 'bottom-right',
-      glowing: true,
-      ...buttonOptions
-    });
 
     const showPopup = () => {
       container.style.display = 'flex';
@@ -136,15 +189,10 @@ const ShadowWidgets = {
       coverageVerification.style.opacity = '1';
       coverageVerification.style.transform = 'translateY(0)';
       document.body.style.overflow = 'hidden';
-      
-      // Dispatch event to switch to coverage tab and show patient search
-      coverageVerification.dispatchEvent(new CustomEvent('switch-tab', {
-        detail: { tab: 'coverage' }
-      }));
     };
 
     // Wire up the button click to show the popup
-    button.addEventListener('click', showPopup);
+    btn.addEventListener('click', showPopup);
 
     const hidePopup = () => {
       container.style.opacity = '0';
@@ -179,16 +227,21 @@ const ShadowWidgets = {
     const cleanup = () => {
       document.removeEventListener('keydown', handleEscape);
       container.remove();
-      button.remove();
+      btn.remove();
     };
 
-    return { container, button, coverageVerification, cleanup };
+    return { container, btn, coverageVerification, cleanup };
   },
 
-  createPriorAuthClaimManagementWithButton(buttonOptions = {}) {
-    // Create a container for the prior auth & claim management popup
+  createPriorAuthClaimManagementWithButton(options = {}) {
+    const btn = this.createFloatingButton({
+      ...options,
+      position: 'bottom-right-2',
+      type: 'prior-auth'
+    });
+
     const container = document.createElement('div');
-    container.id = 'prior-auth-claim-management-container';
+    container.id = 'prior-auth-container';
     container.style.cssText = `
       position: fixed;
       top: 0;
@@ -198,7 +251,6 @@ const ShadowWidgets = {
       background: rgba(0, 0, 0, 0.5);
       display: none;
       z-index: 9998;
-      overflow-y: auto;
       padding: 2rem;
       box-sizing: border-box;
       opacity: 0;
@@ -207,31 +259,47 @@ const ShadowWidgets = {
       align-items: flex-start;
     `;
     
-    // Create the prior auth & claim management component
     const priorAuthClaimManagement = document.createElement('prior-auth-claim-management');
     priorAuthClaimManagement.style.cssText = `
       margin: 0 auto;
       width: 100%;
       max-width: 1200px;
+      height: calc(100vh - 4rem);
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s ease;
       position: relative;
       z-index: 9998;
+      background: white;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     `;
 
+    // Create a wrapper for the entire modal content
+    const modalWrapper = document.createElement('div');
+    modalWrapper.style.cssText = modalWrapperStyles;
+
+    // Add styles to the content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.style.cssText = modalContentStyles;
+    
+    // Move the content into the wrapper
+    while (priorAuthClaimManagement.firstChild) {
+      contentWrapper.appendChild(priorAuthClaimManagement.firstChild);
+    }
+
+    // Add the action buttons container
+    const actionContainer = document.createElement('div');
+    actionContainer.style.cssText = modalActionStyles;
+
+    // Assemble the modal structure
+    modalWrapper.appendChild(contentWrapper);
+    modalWrapper.appendChild(actionContainer);
+    priorAuthClaimManagement.appendChild(modalWrapper);
     container.appendChild(priorAuthClaimManagement);
     document.body.appendChild(container);
-
-    // Create the floating button
-    const button = this.createFloatingButton({
-      position: buttonOptions.position || 'bottom-right',
-      glowing: buttonOptions.glowing !== undefined ? buttonOptions.glowing : true,
-      type: 'prior-auth',
-      ...buttonOptions,
-      // Ensure type is not overridden by buttonOptions spread
-      type: 'prior-auth'
-    });
 
     const showPopup = () => {
       container.style.display = 'flex';
@@ -241,14 +309,9 @@ const ShadowWidgets = {
         priorAuthClaimManagement.style.transform = 'translateY(0)';
       });
       document.body.style.overflow = 'hidden';
-      
-      // Dispatch event to switch to prior-auth tab
-      priorAuthClaimManagement.dispatchEvent(new CustomEvent('switch-tab', {
-        detail: { tab: 'prior-auth' }
-      }));
     };
 
-    button.addEventListener('click', showPopup);
+    btn.addEventListener('click', showPopup);
 
     const hidePopup = () => {
       container.style.opacity = '0';
@@ -279,10 +342,10 @@ const ShadowWidgets = {
     const cleanup = () => {
       document.removeEventListener('keydown', handleEscape);
       container.remove();
-      button.remove();
+      btn.remove();
     };
 
-    return { container, button, priorAuthClaimManagement, cleanup };
+    return { container, btn, priorAuthClaimManagement, cleanup };
   }
 };
 

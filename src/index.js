@@ -15,13 +15,11 @@ import { ShadowWidgets } from './shadow-widgets.js';
 
 // Initialize both widgets with different positions
 const coverageVerification = ShadowWidgets.createCoverageVerificationWithButton({
-  position: 'bottom-right',
   glowing: true
 });
 
 
 const priorAuthWidget = ShadowWidgets.createPriorAuthClaimManagementWithButton({
-  position: 'bottom-left',
   glowing: true
 });
 // Export helpers and widgets
