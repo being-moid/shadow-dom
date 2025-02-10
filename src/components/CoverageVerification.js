@@ -6,6 +6,7 @@ import avatarImage from '../styles/avatar.png';
 import avatarBarcode from '../styles/avatar-barcode.png';
 import userIcon from '../styles/user.svg';
 import shieldIcon from '../styles/shield.svg';
+import {API_ENDPOINTS}  from '../config/api.js'
 import { 
   BENEFIT_CATEGORIES, 
   SERVICE_TYPE_TO_CATEGORY_MAPPING,
@@ -14,7 +15,7 @@ import {
   getSuggestedCategories,
   getIntelligentMapping
 } from '../constants/benefitMappings.js';
-import API_ENDPOINTS from '@config/api.js';
+  
 
 const componentStyles = css`
   :host {
@@ -32,8 +33,12 @@ const componentStyles = css`
     border-radius: 0.75rem;
     position: relative;
     width: 100%;
-    overflow: hidden;
+    overflow: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+
+
 
   .header {
     background: #463AA1;
@@ -2859,7 +2864,7 @@ export class CoverageVerification extends LitElement {
     this.requestUpdate();
   }
 
-  completeMappingAndProceed() {
+  async completeMappingAndProceed() {
     // Validate all recommended benefits are mapped
     let unmappedRecommended = false;
     this.serviceTypes.forEach(serviceType => {
@@ -2874,7 +2879,7 @@ export class CoverageVerification extends LitElement {
 
     if (unmappedRecommended) {
       if (confirm('There are recommended benefits that have not been mapped. Do you want to auto-map them before proceeding?')) {
-    this.serviceTypes.forEach(serviceType => {
+        this.serviceTypes.forEach(serviceType => {
           this.autoMapBenefits(serviceType.id);
         });
       }
@@ -2882,6 +2887,59 @@ export class CoverageVerification extends LitElement {
 
     this.isMappingComplete = true;
     this.requestUpdate();
+
+    // Construct mapping payload object
+    const mappingPayload = {
+      patientId: this.selectedPatient?.id,  // Added patientId
+      contractId: this.selectedContract?.id,
+      planId: this.selectedPlan?.id,
+      insuranceCompanyId: this.selectedInsuranceCompany?.id,
+      mapping: this.serviceTypes.map(serviceType => ({
+        serviceTypeId: serviceType.id,
+        coverageBenefitIds: serviceType.mapped ? serviceType.mapped.map(b => b.id) : [],
+        totalAmount: this.calculateTotalAllowed(serviceType.mapped || [])  // Sum of allowed amounts
+      })).filter(item => item.coverageBenefitIds.length > 0)
+    };
+
+    console.log('Submitting mapping payload:', mappingPayload);
+
+    try {
+      const response = await fetch(API_ENDPOINTS.INSURANCE_PLAN.MapNPHIESCoverageBenefit, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(mappingPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit mapping payload');
+      }
+
+      const result = await response.json();
+      console.log('Mapping payload submission result:', result);
+
+      const successEvent = new CustomEvent('show-notification', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          message: 'Mapping submitted successfully',
+          type: 'success'
+        }
+      });
+      this.dispatchEvent(successEvent);
+    } catch (err) {
+      console.error(err);
+      const errorEvent = new CustomEvent('show-notification', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          message: err.message,
+          type: 'error'
+        }
+      });
+      this.dispatchEvent(errorEvent);
+    }
   }
 
   renderMappedBenefits() {

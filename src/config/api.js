@@ -1,4 +1,4 @@
-const API_URL = 'http://80.238.230.182:8081';
+const API_URL = 'https://localhost:7006';
 
 export const API_ENDPOINTS = {
     // Insurance Company endpoints
@@ -7,13 +7,19 @@ export const API_ENDPOINTS = {
         PAGED: `${API_URL}/api/insurancecompany/getpagedasync`,
         CONTRACTS: (id) => `${API_URL}/api/insurancecompany/contracts/${id}`,
         CONTRACT_PLANS: (contractId) => `${API_URL}/api/insurancecompany/contracts/${contractId}/plans`
+    },  
+    INSURANCE_PLAN:{
+        BASE: `${API_URL}/api/InsurancePlan`,
+        MapNPHIESCoverageBenefit: `${API_URL}/api/InsurancePlan/MapNPHIESCoverageBenefit`,
+        BULK_INSERT: `${API_URL}/api/InsuranceSlab/BulkInsert`
     },
-    
     // Insurance Contract endpoints
+
     INSURANCE_CONTRACT: {
         BASE: `${API_URL}/api/InsuranceContract`,
         BULK_INSERT: `${API_URL}/api/InsuranceSlab/BulkInsert`
     },
+
     
     // Insurance Policy endpoints
     INSURANCE_POLICY: {

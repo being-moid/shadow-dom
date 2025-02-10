@@ -294,13 +294,32 @@ export class InsuranceContractManager extends LitElement {
     this.error = null;
     this.mode = 'existing';
     this.insuranceCompanies = [];
+    
+    // Set default dates for new contracts
+    const today = new Date();
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    
     this.newContract = {
       fkCompanyId: 0,
       contractName: '',
-      contractDate: '',
+      contractDate: today.toISOString().split('T')[0],
       rowStatus: 1,
       createdby: 1,
-      insurancePlans: []
+      insurancePlans: [{
+        planName: '',
+        planCode: '',
+        planCategory: '',
+        startDate: today.toISOString().split('T')[0],
+        endDate: nextYear.toISOString().split('T')[0],
+        createdby: 1,
+        rowStatus: 1,
+        maxDeductable: 0,
+        level: 1,
+        copayOnGross: 0,
+        copayAmount: 0,
+        annualLimit: 0
+      }]
     };
     this.addEventListener('plan-created', this.handlePlanCreated);
   }
@@ -362,19 +381,6 @@ export class InsuranceContractManager extends LitElement {
   render() {
     return html`
       <div class="form-container">
-        <div class="mode-toggle">
-          <span class="toggle-label">Create New Contract</span>
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              .checked=${this.mode === 'existing'}
-              @change=${this.toggleMode}
-            >
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="toggle-label">Use Existing Contract</span>
-        </div>
-
         ${this.error ? html`<div class="error">${this.error}</div>` : ''}
         
         <div class="form-section">
@@ -408,43 +414,42 @@ export class InsuranceContractManager extends LitElement {
           </div>
         </div>
 
-        ${this.mode === 'existing' ? html`
-          <div class="form-section ${!this.insuranceCompanyId ? 'loading-overlay' : ''}">
-            <h4 class="form-section-title">Select Contract</h4>
-            <div class="form-field-wrapper">
-              ${this.loadingContracts ? html`
-                <div class="skeleton skeleton-select"></div>
-              ` : html`
-                <select 
-                  class="form-select"
-                  .value=${this.selectedContractId}
-                  @change=${this.handleContractSelect}
-                  ?disabled=${!this.insuranceCompanyId}
-                >
-                  <option value="">Select Contract</option>
-                  ${Array.isArray(this.contracts) ? this.contracts.map(contract => html`
-                    <option value=${contract.id}>${contract.contractName}</option>
-                  `) : ''}
-                </select>
-                <label class="form-label">Contract</label>
-              `}
-            </div>
+        <div class="form-section ${!this.insuranceCompanyId ? 'loading-overlay' : ''}">
+          <h4 class="form-section-title">Select Contract</h4>
+          <div class="form-field-wrapper">
+            ${this.loadingContracts ? html`
+              <div class="skeleton skeleton-select"></div>
+            ` : html`
+              <select 
+                class="form-select"
+                .value=${this.selectedContractId}
+                @change=${this.handleContractSelect}
+                ?disabled=${!this.insuranceCompanyId}
+              >
+                <option value="">Select Contract</option>
+                ${Array.isArray(this.contracts) ? this.contracts.map(contract => html`
+                  <option value=${contract.id}>${contract.contractName}</option>
+                `) : ''}
+              </select>
+              <label class="form-label">Contract</label>
+            `}
+          </div>
 
-            ${this.selectedContractId ? html`
-              <div class="plans-list">
-                <h4 class="form-section-title">Available Plans</h4>
-                ${this.loadingPlans ? html`
-                  <div class="skeleton skeleton-plan"></div>
-                  <div class="skeleton skeleton-plan"></div>
-                  <div class="skeleton skeleton-plan"></div>
-                ` : html`
-                  ${Array.isArray(this.plans) && this.plans.length === 0 
-                    ? html`
+          ${this.selectedContractId ? html`
+            <div class="plans-list">
+              <h4 class="form-section-title">Available Plans</h4>
+              ${this.loadingPlans ? html`
+                <div class="skeleton skeleton-plan"></div>
+                <div class="skeleton skeleton-plan"></div>
+                <div class="skeleton skeleton-plan"></div>
+              ` : html`
+                ${Array.isArray(this.plans) && this.plans.length === 0 
+                  ? html`
                       <insurance-plan-manager
                         .contractId=${this.selectedContractId}
                       ></insurance-plan-manager>
                     `
-                    : html`
+                  : html`
                       ${Array.isArray(this.plans) ? this.plans.map(plan => html`
                         <div 
                           class="plan-item ${plan.id === this.selectedPlanId ? 'selected' : ''}"
@@ -456,109 +461,87 @@ export class InsuranceContractManager extends LitElement {
                         </div>
                       `) : ''}
                     `}
-                `}
-              </div>
-            ` : ''}
-          </div>
-        ` : html`
-          <div class="form-section ${!this.insuranceCompanyId ? 'loading-overlay' : ''}">
-            <h4 class="form-section-title">Create New Contract</h4>
-            <form @submit=${this.handleContractSubmit}>
-              <div class="form-grid">
-                <div class="form-field-wrapper">
-                  <input 
-                    type="text" 
-                    class="form-input"
-                    .value=${this.newContract.contractName}
-                    @input=${e => this.newContract.contractName = e.target.value}
-                    required
-                    ?disabled=${!this.insuranceCompanyId}
-                  />
-                  <label class="form-label">Contract Name</label>
-                </div>
-                
-                <div class="form-field-wrapper">
-                  <input 
-                    type="date" 
-                    class="form-input"
-                    .value=${this.newContract.contractDate}
-                    @input=${e => this.newContract.contractDate = e.target.value}
-                    required
-                    ?disabled=${!this.insuranceCompanyId}
-                  />
-                  <label class="form-label">Contract Date</label>
-                </div>
-              </div>
-
-              <insurance-plan-manager
-                .contractId=${0}
-                .isNewContract=${true}
-                .disabled=${!this.insuranceCompanyId}
-                @plan-data=${this.handlePlanData}
-              ></insurance-plan-manager>
-
-              <button 
-                type="submit" 
-                class="primary-button"
-                ?disabled=${this.loading || this.loadingContracts || this.loadingPlans || !this.insuranceCompanyId}
-              >
-                ${this.loading || this.loadingContracts || this.loadingPlans ? html`
-                  <span class="loading"></span>
-                  Creating...
-                ` : 'Create Contract & Plan'}
-              </button>
-            </form>
-          </div>
-        `}
+              `}
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
   }
 
   handlePlanData(e) {
+    console.log('Plan Data Received:', e.detail);
     const planData = e.detail;
+
+    // Update the insurance plans array with the form data
     this.newContract.insurancePlans = [{
-      ...planData,
+      planName: planData.planName,
+      planCode: planData.planCode,
+      startDate: planData.startDate,
+      endDate: planData.endDate,
+      planCategory: planData.planCategory || 'A',
       rowStatus: 1,
       createdBy: 1,
-      level: 2,
+      level: 1,
       copayAmount: planData.copayAmount || 0,
+      copayOnGross: planData.copayOnGross || 0,
+      maxDeductable: planData.maxDeductable || 0,
+      annualLimit: planData.annualLimit || 0,
       planNameIdpayer: planData.planName,
-      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      fkPolicyId: null,
+      insuranceSlabs: []
     }];
+
+    console.log('Updated Contract Plans:', this.newContract.insurancePlans);
   }
 
   async handleContractSubmit(e) {
     e.preventDefault();
     try {
       this.loading = true;
-      
-      if (!this.newContract.insurancePlans || this.newContract.insurancePlans.length === 0) {
-        throw new Error('Please add at least one insurance plan');
+
+      if (!this.newContract.contractName) {
+        throw new Error('Contract name is required');
       }
 
+      if (!this.insuranceCompanyId) {
+        throw new Error('Please select an insurance company');
+      }
+
+      // Directly use the plan from the form data
+      const plan = this.newContract.insurancePlans[0];
+
       const contractPayload = {
-        ...this.newContract,
         fkCompanyId: parseInt(this.insuranceCompanyId),
+        contractName: this.newContract.contractName,
+        contractDate: this.newContract.contractDate,
         rowStatus: 1,
         createdby: 1,
-        insurancePlans: this.newContract.insurancePlans.map(plan => ({
-          ...plan,
+        // Optional field if needed: filePath
+        insurancePlans: [{
+          planName: plan.planName,
+          planCode: plan.planCode,
+          planNameIdpayer: plan.planName,
+          planCategory: plan.planCategory || 'A',
+          copayAmount: plan.copayAmount,
+          annualLimit: plan.annualLimit,
+          maxDeductable: plan.maxDeductable,
+          level: 1,
+          copayOnGross: plan.copayOnGross,
+          expiryDate: plan.endDate, // using endDate as expiryDate
           rowStatus: 1,
-          createdBy: 1,
-          level: plan.level || 1,
-          copayAmount: plan.copayAmount || 0,
-          copayOnGross: plan.copayOnGross || 0,
-          planNameIdpayer: plan.planNameIdpayer || plan.planName,
-          expiryDate: plan.expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
-        }))
+          createdBy: 1
+        }]
       };
+
+      console.log('Submitting contract payload:', contractPayload);
 
       const response = await fetch(API_ENDPOINTS.INSURANCE_CONTRACT.BASE, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(contractPayload),
+        body: JSON.stringify(contractPayload)
       });
       
       if (!response.ok) throw new Error('Failed to create contract');
@@ -651,13 +634,30 @@ export class InsuranceContractManager extends LitElement {
   }
 
   resetForm() {
+    const today = new Date();
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+
     this.newContract = {
       fkCompanyId: this.insuranceCompanyId,
       contractName: '',
-      contractDate: '',
+      contractDate: today.toISOString().split('T')[0],
       rowStatus: 1,
       createdby: 1,
-      insurancePlans: []
+      insurancePlans: [{
+        planName: '',
+        planCode: '',
+        planCategory: '',
+        startDate: today.toISOString().split('T')[0],
+        endDate: nextYear.toISOString().split('T')[0],
+        createdby: 1,
+        rowStatus: 1,
+        maxDeductable: 0,
+        level: 1,
+        copayOnGross: 0,
+        copayAmount: 0,
+        annualLimit: 0
+      }]
     };
     
     const planManager = this.shadowRoot.querySelector('insurance-plan-manager');
