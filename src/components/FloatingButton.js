@@ -2,84 +2,50 @@ import { LitElement, html, css } from 'lit';
 
 const componentStyles = css`
   :host {
-    position: fixed;
-    z-index: 9999;
     display: block;
+    position: fixed;
+    z-index: 1000;
   }
 
-  :host([position='bottom-right']) {
+  :host([position="bottom-right-1"]) {
     bottom: 2rem;
     right: 2rem;
   }
 
-  :host([position='bottom-left']) {
-    bottom: 2rem;
-    left: 2rem;
-  }
-
-  :host([position='bottom-right']:not(:first-of-type)) {
+  :host([position="bottom-right-2"]) {
     bottom: 6rem;
-  }
-
-  :host([position='bottom-left']:not(:first-of-type)) {
-    bottom: 6rem;
+    right: 2rem;
   }
 
   button {
-    background: #463AA1;
-    color: white;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    background: #8500d8;
     border: none;
-    border-radius: 50%;
-    padding: 0.875rem;
-    font-size: 1rem;
-    font-weight: 600;
+    color: white;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transition: all 0.2s ease;
-    width: 3.5rem;
-    height: 3.5rem;
-    position: relative;
-    z-index: 9999;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 
   button:hover {
-    background: #5B4FC7;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+    background: #6a00ad;
   }
 
-  button svg {
-    width: 1.75rem;
-    height: 1.75rem;
-    flex-shrink: 0;
-    stroke: currentColor;
-    stroke-width: 1.75;
-  }
-
-  button span {
-    display: none;
-  }
-
-  @keyframes glow {
-    0%, 100% {
-      box-shadow: 0 0 5px rgba(70, 58, 161, 0.5), 0 0 10px rgba(70, 58, 161, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 15px rgba(70, 58, 161, 0.8), 0 0 20px rgba(70, 58, 161, 0.5);
-    }
-  }
-
-  :host([glowing]) button {
-    animation: glow 2s ease-in-out infinite;
-  }
-
-  :host([disabled]) button {
-    opacity: 0.5;
+  button:disabled {
+    background: #9CA3AF;
     cursor: not-allowed;
-    pointer-events: none;
+    transform: none;
+  }
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 `;
 

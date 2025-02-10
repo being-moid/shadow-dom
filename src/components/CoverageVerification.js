@@ -14,6 +14,7 @@ import {
   getSuggestedCategories,
   getIntelligentMapping
 } from '../constants/benefitMappings.js';
+import API_ENDPOINTS from '@config/api.js';
 
 const componentStyles = css`
   :host {
@@ -1995,7 +1996,7 @@ export class CoverageVerification extends LitElement {
 
   async loadFacilities() {
     try {
-      const response = await fetch('https://localhost:7006/api/buildingmanagementfacility/getpagedasync', {
+      const response = await fetch(API_ENDPOINTS.FACILITY.PAGED, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2022,7 +2023,7 @@ export class CoverageVerification extends LitElement {
 
   async loadInsuranceCompanies() {
     try {
-      const response = await fetch('https://localhost:7006/api/insurancecompany/getpagedasync', {
+      const response = await fetch(API_ENDPOINTS.INSURANCE_COMPANY.PAGED, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2163,7 +2164,7 @@ export class CoverageVerification extends LitElement {
       const payload = this.prepareVerificationPayload();
       console.log('Verification Payload:', payload);
       
-      const response = await fetch('https://localhost:7006/api/Eligibility/VerifyCoverage/secondstep', {
+      const response = await fetch(API_ENDPOINTS.ELIGIBILITY.VERIFY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -3354,7 +3355,7 @@ export class CoverageVerification extends LitElement {
 
   async loadPolicies() {
     try {
-      const response = await fetch('https://localhost:7006/api/InsurancePolicy/getpagedasync', {
+      const response = await fetch(API_ENDPOINTS.INSURANCE_POLICY.PAGED, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3761,7 +3762,7 @@ export class CoverageVerification extends LitElement {
         }]
       };
 
-      const endpoint = 'https://localhost:7006/api/InsuranceContract';
+      const endpoint = API_ENDPOINTS.INSURANCE_CONTRACT.BASE;
       const method = this.selectedContract.id ? 'PUT' : 'POST';
       const url = method === 'PUT' ? `${endpoint}/${this.selectedContract.id}` : endpoint;
 
