@@ -1,6 +1,6 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import './PatientSearch.js';
-import nphiesLogo from '../styles/nphies.png';
+import nphiesLogo from '../styles/nphies-logo-trans.png';
 import avatarImage from '../styles/avatar.png';
 import avatarBarcode from '../styles/avatar-barcode.png';
 import userIcon from '../styles/user.svg';
@@ -15,9 +15,9 @@ const componentStyles = css`
     background: var(--sw-background-color, #f8fafc);
     color: var(--sw-text-color, #1e293b);
     font-family: var(--sw-font-family, 'Inter', system-ui, -apple-system, sans-serif);
-    --primary: #463AA1;
-    --primary-dark: #372d81;
-    --primary-light: #5B4FC7;
+    --primary: #8500d8;
+    --primary-dark: #6a00ad;
+    --primary-light: #9d1aff;
     --success: #10B981;
     --warning: #F59E0B;
     --error: #EF4444;
@@ -33,6 +33,155 @@ const componentStyles = css`
     --gray-900: #111827;
   }
 
+  /* Typography */
+  h1, .h1 {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  h2, .h2 {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  h3, .h3 {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+
+  p, .body-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .small-text {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Update header styles */
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* Update tabs */
+  .tabs {
+    display: flex;
+    background: var(--primary);
+    padding: 0 2rem;
+  }
+
+  .tab {
+    padding: 0.5rem 2rem;
+    color: white;
+    cursor: pointer;
+    background: transparent;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .tab.active {
+    background: white;
+    color: var(--primary);
+  }
+
+  /* Update section titles */
+  .section-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Update form labels and inputs */
+  .form-label {
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .form-input {
+    font-size: 16px;
+  }
+
+  /* Update table text */
+  .table-container {
+    font-size: 14px;
+  }
+
+  th {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  td {
+    font-size: 14px;
+  }
+
+  /* Update buttons */
+  button {
+    font-size: 14px;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+  }
+
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .close-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2.5;
+  }
+
+  /* Update progress bar */
+  .progress-bar {
+    background: var(--success);
+  }
+
+  /* Update other button styles */
+  .btn-primary {
+    background: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-dark);
+  }
+
   .wrapper {
     display: flex;
     flex-direction: column;
@@ -44,93 +193,28 @@ const componentStyles = css`
   .sticky-header {
     position: sticky;
     top: 0;
-    z-index: 10;
     background: white;
-    border-bottom: 1px solid var(--gray-200);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    z-index: 10;
   }
 
-  .header {
+  .header-content {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: white;
-    font-weight: 600;
-    color: var(--gray-800);
-    font-size: 1.125rem;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .nphies-logo {
-    height: 2.5rem;
-    margin-left: 1.5rem;
+    width: 140px;
+    height: auto;
+    object-fit: contain;
   }
 
   .progress-indicator {
-    flex: 1;
-    height: 0.25rem;
-    background: var(--gray-200);
-    margin: 0 2rem;
-    border-radius: 9999px;
+    width: 100%;
+    height: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.25rem;
     overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: var(--primary);
-    transition: width 0.3s ease;
-    border-radius: 9999px;
-  }
-
-  .close-button {
-    padding: 0.5rem;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--gray-600);
-    border-radius: 0.375rem;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .close-button:hover {
-    background: var(--gray-100);
-    color: var(--gray-900);
-  }
-
-  .close-button svg {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .tabs {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0 1.5rem;
-    background: white;
-    border-bottom: 1px solid var(--gray-200);
-  }
-
-  .tab {
-    padding: 0.875rem 1.5rem;
-    color: var(--gray-600);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    font-weight: 500;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-    letter-spacing: 0.025em;
-  }
-
-  .tab:hover {
-    color: var(--gray-900);
-  }
-
-  .tab.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
   }
 
   .content {
@@ -174,16 +258,6 @@ const componentStyles = css`
     background: var(--gray-50);
   }
 
-  .section-title {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--gray-800);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
   .section-title svg {
     width: 1.5rem;
     height: 1.5rem;
@@ -204,31 +278,6 @@ const componentStyles = css`
   .form-field {
     position: relative;
     margin-bottom: 1.5rem;
-  }
-
-  .form-label {
-    position: absolute;
-    left: 0.875rem;
-    top: 0.875rem;
-    color: var(--gray-500);
-    transition: all 0.2s;
-    pointer-events: none;
-    font-size: 0.875rem;
-    background: white;
-    padding: 0 0.25rem;
-    margin: 0 -0.25rem;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    border: 1.5px solid var(--gray-300);
-    border-radius: 0.5rem;
-    background: white;
-    color: var(--gray-800);
-    font-size: 0.875rem;
-    transition: all 0.2s;
-    line-height: 1.25;
   }
 
   .form-input:hover {
@@ -330,7 +379,7 @@ const componentStyles = css`
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--gray-200);
     position: sticky;
-    bottom: 1.5rem;
+    bottom: -24px;
   }
 
   .btn {
@@ -341,7 +390,6 @@ const componentStyles = css`
     border: none;
     border-radius: 0.5rem;
     font-weight: 500;
-    font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
   }
@@ -349,16 +397,6 @@ const componentStyles = css`
   .btn svg {
     width: 1.25rem;
     height: 1.25rem;
-  }
-
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
   }
 
   .btn-secondary {
@@ -390,7 +428,6 @@ const componentStyles = css`
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
   }
 
   th {
@@ -556,6 +593,100 @@ const componentStyles = css`
     height: 1rem;
     border-width: 2px;
   }
+
+  .visit-table-container {
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+    border: 1px solid var(--gray-200);
+  }
+
+  .visit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .visit-table th {
+    background: var(--gray-50);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+    color: var(--gray-600);
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .visit-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .visit-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .visit-table tr.selected {
+    background: var(--primary-50);
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .status-scheduled {
+    background: var(--gray-100);
+    color: var(--gray-700);
+  }
+
+  .status-in-progress {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+
+  .status-completed {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+
+  .status-cancelled {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+
+  .btn-select {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-select:hover:not(:disabled) {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--primary);
+    color: white;
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: var(--gray-500);
+  }
 `;
 
 export class PriorAuthClaimManagement extends LitElement {
@@ -572,6 +703,8 @@ export class PriorAuthClaimManagement extends LitElement {
       isLoading: { type: Boolean },
       formData: { type: Object },
       progress: { type: Number },
+      visitDetails: { type: Object },
+      supportingInfo: { type: Array }
     };
   }
 
@@ -610,6 +743,8 @@ export class PriorAuthClaimManagement extends LitElement {
       }
     };
     this.progress = 0;
+    this.visitDetails = null;
+    this.supportingInfo = [];
 
     this.addEventListener('switch-tab', this.switchTab);
   }
@@ -623,14 +758,16 @@ export class PriorAuthClaimManagement extends LitElement {
       <div class="wrapper">
         <div class="sticky-header">
           <div class="header">
-            Prior Auth & Claim Management Center
             <img src="${nphiesLogo}" class="nphies-logo" alt="NPHIES">
-            <div class="progress-indicator">
-              <div class="progress-bar" style="width: ${this.getProgressPercentage()}%"></div>
+            <div class="header-content">
+              <h1 class="header-title">Prior Auth & Claim Management Center</h1>
+              <div class="progress-indicator">
+                <div class="progress-bar" style="width: ${this.getProgressPercentage()}%"></div>
+              </div>
             </div>
             <button class="close-button" @click="${this.handleClose}">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
@@ -700,22 +837,7 @@ export class PriorAuthClaimManagement extends LitElement {
               </h2>
             </div>
             <div class="section-content">
-              <div class="form-grid">
-                <div class="form-field">
-                  <input type="date" class="form-input" id="dateRange" @change="${this.handleDateRangeChange}">
-                  <label class="form-label" for="dateRange">Date Range</label>
-                </div>
-                <div class="form-field">
-                  <select class="form-input" id="visitType" @change="${this.handleVisitTypeChange}">
-                    <option value="">Select Type</option>
-                    <option value="outpatient">Outpatient</option>
-                    <option value="inpatient">Inpatient</option>
-                    <option value="emergency">Emergency</option>
-                  </select>
-                  <label class="form-label" for="visitType">Visit Type</label>
-                </div>
-              </div>
-              ${this.renderVisitTable()}
+              ${this.renderVisitDetails()}
             </div>
           </div>
 
@@ -740,7 +862,7 @@ export class PriorAuthClaimManagement extends LitElement {
                   </div>
                 ` : ''}
               </div>
-              ${this.renderCareTeamTable()}
+              ${this.renderCareTeam()}
             </div>
           </div>
 
@@ -913,6 +1035,79 @@ export class PriorAuthClaimManagement extends LitElement {
     `;
   }
 
+  renderVisitDetails() {
+    if (!this.visits?.length) return html`
+      <div class="empty-state">
+        No visits found for this patient
+      </div>
+    `;
+
+    return html`
+      <div class="visit-table-container">
+        <table class="visit-table">
+          <thead>
+            <tr>
+              <th>Visit Date</th>
+              <th>Time</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Episode ID</th>
+              <th>Transaction ID</th>
+              <th>Facility</th>
+              <th>Provider</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.visits.map(visit => html`
+              <tr class="${this.selectedVisit?.id === visit.id ? 'selected' : ''}">
+                <td>${new Date(visit.visitDate).toLocaleDateString()}</td>
+                <td>${visit.startTime}</td>
+                <td>${this.getVisitTypeName(visit.fkVisitSubTypeId)}</td>
+                <td>
+                  <span class="status-badge ${this.getStatusClass(visit.fkPatientVisitStatusId)}">
+                    ${this.getVisitStatusName(visit.fkPatientVisitStatusId)}
+                  </span>
+                </td>
+                <td>${visit.episodeId}</td>
+                <td>${visit.transactionIdno}</td>
+                <td>${visit.fkFacilityId}</td>
+                <td>${visit.doctorId}</td>
+                <td>
+                  <button 
+                    class="btn-select"
+                    @click="${() => this.selectVisit(visit)}"
+                    ?disabled="${this.selectedVisit?.id === visit.id}"
+                  >
+                    ${this.selectedVisit?.id === visit.id ? 'Selected' : 'Select'}
+                  </button>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  renderCareTeam() {
+    if (!this.careTeam?.length) return '';
+
+    return html`
+      <div class="care-team-list">
+        ${this.careTeam.map(member => html`
+          <div class="team-member">
+            <div class="member-info">
+              <span class="member-id">ID: ${member.id}</span>
+              <span class="member-role">${member.role}</span>
+              <span class="member-type">${member.type}</span>
+            </div>
+          </div>
+        `)}
+      </div>
+    `;
+  }
+
   renderVisitTable() {
     return html`
       <div class="table-container">
@@ -1064,22 +1259,7 @@ export class PriorAuthClaimManagement extends LitElement {
       this.selectedPatient = event.detail;
       
       // Fetch visits for the selected patient
-      const response = await fetch(API_ENDPOINTS.VISIT.PAGED, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          page: 1,
-          pageSize: 10,
-          filters: {
-            patientId: this.selectedPatient.id
-          }
-        })
-      });
-      
-      const result = await response.json();
-      if (result.isSuccessfull) {
-        this.visits = result.dynamicResult;
-      }
+      await this.fetchVisits();
       
       this.updateProgress();
     } catch (error) {
@@ -1087,6 +1267,74 @@ export class PriorAuthClaimManagement extends LitElement {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  async fetchVisits() {
+    if (!this.selectedPatient) return;
+    
+    this.isLoading = true;
+    try {
+      const response = await fetch(API_ENDPOINTS.VISIT.PAGED, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          page: 1,
+          pageSize: 10,
+          filters: "patientId==" + this.selectedPatient.id
+        })
+      });
+      
+      const result = await response.json();
+      if (result.isSuccessfull && result.dynamicResult) {
+        this.visits = result.dynamicResult;
+        if (this.visits.length > 0) {
+          this.selectVisit(this.visits[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  processVisitData(visit) {
+    if (!visit) return;
+
+    // Set visit details
+    this.visitDetails = {
+      id: visit.id,
+      date: visit.date,
+      time: visit.time,
+      type: visit.type,
+      status: visit.status,
+      facility: visit.facility,
+      reasonOfVisit: visit.reasonOfVisit,
+      episodeId: visit.episodeId,
+      transactionId: visit.transactionId
+    };
+
+    // Set care team from the visit's provider
+    this.careTeam = [{
+      id: visit.provider,
+      role: 'Primary Provider',
+      type: 'Provider'
+    }];
+
+    // Set procedures from billing details/services
+    this.procedures = visit.services.map(service => ({
+      id: service.id,
+      code: service.cptCode,
+      name: service.serviceName,
+      description: service.description,
+      provider: service.provider,
+      date: service.date,
+      charges: service.charges,
+      status: service.status
+    }));
+
+    this.updateProgress();
+    this.requestUpdate();
   }
 
   handleDateRangeChange(event) {
@@ -1509,6 +1757,43 @@ export class PriorAuthClaimManagement extends LitElement {
   selectProcedure(procedure) {
     this.procedures = [...this.procedures, procedure];
     this.updateProgress();
+    this.requestUpdate();
+  }
+
+  getVisitTypeName(typeId) {
+    const types = {
+      1: 'Regular Visit',
+      2: 'Follow-up',
+      3: 'Emergency',
+      4: 'Consultation'
+    };
+    return types[typeId] || 'Unknown';
+  }
+
+  getVisitStatusName(statusId) {
+    const statuses = {
+      1: 'Scheduled',
+      2: 'In Progress',
+      3: 'Completed',
+      4: 'Cancelled'
+    };
+    return statuses[statusId] || 'Unknown';
+  }
+
+  getStatusClass(statusId) {
+    const classes = {
+      1: 'status-scheduled',
+      2: 'status-in-progress',
+      3: 'status-completed',
+      4: 'status-cancelled'
+    };
+    return classes[statusId] || 'status-scheduled';
+  }
+
+  selectVisit(visit) {
+    this.selectedVisit = visit;
+    // Process the selected visit's billing details and other information
+    this.processVisitData(visit);
     this.requestUpdate();
   }
 }
