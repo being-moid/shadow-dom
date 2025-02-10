@@ -1494,7 +1494,7 @@ export class CoverageVerification extends LitElement {
 
         .benefits-report {
           padding: 2rem;
-          background: white;
+        background: white;
         }
 
         .report-header {
@@ -1529,7 +1529,7 @@ export class CoverageVerification extends LitElement {
 
         .meta-value {
           color: #111827;
-          font-weight: 500;
+        font-weight: 500;
         }
 
         .report-summary {
@@ -1591,9 +1591,9 @@ export class CoverageVerification extends LitElement {
         }
 
         .breakdown-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
           margin-bottom: 1rem;
           padding-bottom: 1rem;
           border-bottom: 1px solid #E5E7EB;
@@ -1649,7 +1649,7 @@ export class CoverageVerification extends LitElement {
         }
 
         .benefits-detail-table th {
-          background: #F9FAFB;
+        background: #F9FAFB;
           color: #374151;
           font-weight: 500;
           text-align: left;
@@ -1677,7 +1677,7 @@ export class CoverageVerification extends LitElement {
           }
 
           .benefits-detail-table {
-            display: block;
+        display: block;
             overflow-x: auto;
           }
         }
@@ -1689,7 +1689,7 @@ export class CoverageVerification extends LitElement {
 
         .contract-actions {
           margin-top: 2rem;
-          display: flex;
+        display: flex;
           justify-content: flex-end;
         }
 
@@ -1698,7 +1698,7 @@ export class CoverageVerification extends LitElement {
           color: white;
           padding: 0.75rem 1.5rem;
           border: none;
-          border-radius: 0.5rem;
+        border-radius: 0.5rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -1723,7 +1723,7 @@ export class CoverageVerification extends LitElement {
         .progress-stats {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+        gap: 0.5rem;
           margin: 0.5rem 0;
         }
 
@@ -1731,11 +1731,11 @@ export class CoverageVerification extends LitElement {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.875rem;
+        font-size: 0.875rem;
         }
 
         .progress-label {
-          color: #6B7280;
+        color: #6B7280;
           min-width: 4rem;
         }
 
@@ -1768,17 +1768,17 @@ export class CoverageVerification extends LitElement {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
+        margin-bottom: 1.5rem;
+      }
 
         .contract-mode-toggle {
-          display: flex;
-          align-items: center;
+        display: flex;
+        align-items: center;
           gap: 1rem;
           margin-bottom: 2rem;
-          padding: 1rem;
+        padding: 1rem;
           background: #F9FAFB;
-          border-radius: 0.5rem;
+        border-radius: 0.5rem;
         }
 
         .toggle-switch {
@@ -2107,7 +2107,7 @@ export class CoverageVerification extends LitElement {
       }
       
       // Set insurance info
-      this.insuranceInfo = {
+    this.insuranceInfo = {
         companyName: this.selectedPatient.insuranceInfo?.company || '',
         companyCode: '',  // Will be set when proceeding to contract setup
         memberId: this.selectedPatient.insuranceInfo?.memberID || '',
@@ -2140,7 +2140,7 @@ export class CoverageVerification extends LitElement {
       this.activeTab = tab.detail.tab;
     } else {
       // Handle direct tab switch
-      this.activeTab = tab;
+    this.activeTab = tab;
     }
     
     // Reset states when switching to coverage tab
@@ -2157,8 +2157,8 @@ export class CoverageVerification extends LitElement {
   }
 
   async handleVerify() {
-    this.isVerifying = true;
-    
+      this.isVerifying = true;
+      
     try {
       const payload = this.prepareVerificationPayload();
       console.log('Verification Payload:', payload);
@@ -2531,7 +2531,7 @@ export class CoverageVerification extends LitElement {
     return html`
       <div class="section-header">
         <h3 class="section-title">COVERAGE DETAILS</h3>
-      </div>
+        </div>
       <div class="coverage-details-grid">
         <div class="info-field">
           <div class="field-label">TYPE</div>
@@ -2580,7 +2580,7 @@ export class CoverageVerification extends LitElement {
         <div class="info-field">
           <div class="field-label">SUBROGATION</div>
           <div class="field-value">${coverageDetails.subrogation}</div>
-        </div>
+          </div>
         ${coverageDetails.lastEligibilityVerificationDate ? html`
           <div class="info-field">
             <div class="field-label">LAST ELIGIBILITY CHECK</div>
@@ -2602,14 +2602,14 @@ export class CoverageVerification extends LitElement {
     const totalAvailableBenefits = this.availableBenefits.length;
     const totalMappedBenefits = this.serviceTypes.reduce((total, type) => total + (type.mapped?.length || 0), 0);
     const totalRemainingBenefits = totalAvailableBenefits - totalMappedBenefits;
-    
+
     // Calculate total mapped and remaining amounts
     const totalMappedAmount = this.serviceTypes.reduce((total, type) => 
       total + this.calculateTotalAllowed(type.mapped || []), 0);
     const totalAvailableAmount = this.availableBenefits.reduce((total, benefit) => 
       total + (benefit.allowedMoney || 0), 0);
     const totalRemainingAmount = totalAvailableAmount - totalMappedAmount;
-
+    
     return html`
       <div class="benefits-section">
         <button 
@@ -2873,7 +2873,7 @@ export class CoverageVerification extends LitElement {
 
     if (unmappedRecommended) {
       if (confirm('There are recommended benefits that have not been mapped. Do you want to auto-map them before proceeding?')) {
-        this.serviceTypes.forEach(serviceType => {
+    this.serviceTypes.forEach(serviceType => {
           this.autoMapBenefits(serviceType.id);
         });
       }
@@ -3412,7 +3412,7 @@ export class CoverageVerification extends LitElement {
           <div>
             <h3 class="section-title">Contract Setup</h3>
             <p class="section-subtitle">Set up insurance contract and plan details</p>
-          </div>
+      </div>
         </div>
 
         <div class="contract-mode-toggle">
@@ -3681,6 +3681,7 @@ export class CoverageVerification extends LitElement {
 
   handleContractSubmit() {
     // Here you would typically save the contract data
+      
     console.log('Contract submitted:', this.selectedContract);
     this.switchTab('benefits');
   }

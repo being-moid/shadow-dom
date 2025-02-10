@@ -515,22 +515,50 @@ export class InsuranceContractManager extends LitElement {
   }
 
   handlePlanData(e) {
-    this.newContract.insurancePlans = [e.detail];
+    const planData = e.detail;
+    this.newContract.insurancePlans = [{
+      ...planData,
+      rowStatus: 1,
+      createdBy: 1,
+      level: 2,
+      copayAmount: planData.copayAmount || 0,
+      planNameIdpayer: planData.planName,
+      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+    }];
   }
 
   async handleContractSubmit(e) {
     e.preventDefault();
     try {
       this.loading = true;
+      
+      if (!this.newContract.insurancePlans || this.newContract.insurancePlans.length === 0) {
+        throw new Error('Please add at least one insurance plan');
+      }
+
+      const contractPayload = {
+        ...this.newContract,
+        fkCompanyId: parseInt(this.insuranceCompanyId),
+        rowStatus: 1,
+        createdby: 1,
+        insurancePlans: this.newContract.insurancePlans.map(plan => ({
+          ...plan,
+          rowStatus: 1,
+          createdBy: 1,
+          level: plan.level || 1,
+          copayAmount: plan.copayAmount || 0,
+          copayOnGross: plan.copayOnGross || 0,
+          planNameIdpayer: plan.planNameIdpayer || plan.planName,
+          expiryDate: plan.expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+        }))
+      };
+
       const response = await fetch(API_ENDPOINTS.INSURANCE_CONTRACT.BASE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...this.newContract,
-          fkCompanyId: this.insuranceCompanyId
-        }),
+        body: JSON.stringify(contractPayload),
       });
       
       if (!response.ok) throw new Error('Failed to create contract');
@@ -539,13 +567,31 @@ export class InsuranceContractManager extends LitElement {
       if (result.isSuccessfull) {
         await this.fetchContracts();
         this.resetForm();
-        // Select the newly created contract
         this.handleContractSelect({ target: { value: result.dynamicResult.id } });
+        
+        const successEvent = new CustomEvent('show-notification', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            message: 'Contract and plan created successfully',
+            type: 'success'
+          }
+        });
+        this.dispatchEvent(successEvent);
       } else {
         throw new Error(result.errorMessage || 'Failed to create contract');
       }
     } catch (err) {
       this.error = err.message;
+      const errorEvent = new CustomEvent('show-notification', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          message: err.message,
+          type: 'error'
+        }
+      });
+      this.dispatchEvent(errorEvent);
     } finally {
       this.loading = false;
     }
@@ -560,7 +606,6 @@ export class InsuranceContractManager extends LitElement {
     if (contractId) {
       await this.fetchPlans(contractId);
       const selectedContract = this.contracts.find(c => c.id.toString() === contractId);
-      // Emit contract selected event without plan
       this.dispatchEvent(new CustomEvent('contract-selected', {
         detail: { contract: selectedContract },
         bubbles: true,
@@ -573,7 +618,6 @@ export class InsuranceContractManager extends LitElement {
     this.selectedPlanId = plan.id;
     const selectedContract = this.contracts.find(c => c.id.toString() === this.selectedContractId);
     
-    // Emit contract selected event with plan
     this.dispatchEvent(new CustomEvent('contract-selected', {
       detail: { 
         contract: selectedContract,
@@ -615,5 +659,10 @@ export class InsuranceContractManager extends LitElement {
       createdby: 1,
       insurancePlans: []
     };
+    
+    const planManager = this.shadowRoot.querySelector('insurance-plan-manager');
+    if (planManager) {
+      planManager.resetForm();
+    }
   }
 } 
