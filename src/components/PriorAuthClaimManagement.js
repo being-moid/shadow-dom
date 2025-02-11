@@ -1649,11 +1649,17 @@ export class PriorAuthClaimManagement extends LitElement {
     `;
   }
 
-  handleProcedureSearch = this.debounce(async (event) => {
-    const searchTerm = event.target.value;
+  async handleProcedureSearch(event) {
+    console.log('handleProcedureSearch called with event:', event);
+    
+    if (!event || !event.target || !event.target.value) {
+      console.log('Invalid event or missing value:', event);
+      return;
+    }
+
+    const searchTerm = event.target.value.trim();
     console.log('Procedure search triggered with term:', searchTerm);
 
-    // Get or create the dropdown container
     const container = this.shadowRoot.querySelector('#procedureDropdown');
     let resultsContainer = container.querySelector('.dropdown-results');
     
@@ -1754,7 +1760,7 @@ export class PriorAuthClaimManagement extends LitElement {
         this.isLoading = false;
         this.requestUpdate();
     }
-  }, 300);
+  }
 
   renderProcedureTable() {
     if (!this.procedures?.length) {
@@ -1866,7 +1872,7 @@ export class PriorAuthClaimManagement extends LitElement {
     `;
   }
 
-  handleMedicationSearch = this.debounce(async (event) => {
+  async handleMedicationSearch(event) {
     console.log('handleMedicationSearch called with event:', event);
     
     if (!event || !event.target || !event.target.value) {
@@ -1966,7 +1972,7 @@ export class PriorAuthClaimManagement extends LitElement {
         this.isLoading = false;
         this.requestUpdate();
     }
-  }, 300);
+  }
 
   selectMedication(medication) {
     console.log('Selecting medication:', medication);
