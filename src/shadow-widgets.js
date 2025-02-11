@@ -346,6 +346,30 @@ const ShadowWidgets = {
     };
 
     return { container, btn, priorAuthClaimManagement, cleanup };
+  },
+
+  createPriorAuthGridWithButton(options = {}) {
+    const btn = this.createFloatingButton({
+      ...options,
+      position: 'bottom-right-3',
+      type: 'prior-auth-grid'
+    });
+
+    const modal = document.createElement('prior-auth-grid-modal');
+    document.body.appendChild(modal);
+
+    // Wire up the button click to show the modal
+    btn.addEventListener('click', () => {
+      modal.isOpen = true;
+    });
+
+    // Cleanup function
+    const cleanup = () => {
+      modal.remove();
+      btn.remove();
+    };
+
+    return { modal, btn, cleanup };
   }
 };
 
