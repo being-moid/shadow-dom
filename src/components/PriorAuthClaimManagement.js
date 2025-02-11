@@ -15,10 +15,13 @@ const componentStyles = css`
     background: var(--sw-background-color, #f8fafc);
     color: var(--sw-text-color, #1e293b);
     font-family: var(--sw-font-family, 'Inter', system-ui, -apple-system, sans-serif);
-    --primary: #8500d8;
-    --primary-dark: #6a00ad;
-    --primary-light: #9d1aff;
-    --success: #10B981;
+    --medical-primary: #3B82F6;
+    --healthcare-green: #10B981;
+    --healthcare-bg: #F3F4F6;
+    --primary: var(--medical-primary);
+    --primary-dark: #2563eb;
+    --primary-light: #60a5fa;
+    --success: var(--healthcare-green);
     --warning: #F59E0B;
     --error: #EF4444;
     --gray-50: #F9FAFB;
@@ -687,6 +690,221 @@ const componentStyles = css`
     text-align: center;
     color: var(--gray-500);
   }
+
+  .healthcare-search {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .healthcare-search input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    border: 2px solid var(--medical-primary);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background-color: var(--healthcare-bg);
+  }
+
+  .healthcare-search input:focus {
+    outline: none;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+  }
+
+  .healthcare-search svg {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--medical-primary);
+    pointer-events: none;
+  }
+
+  .healthcare-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    max-height: 15rem;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    margin-top: 0.25rem;
+  }
+
+  .healthcare-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--gray-200);
+    transition: all 0.2s;
+  }
+
+  .healthcare-result-item:hover {
+    background: var(--healthcare-bg);
+  }
+
+  .healthcare-result-item h4 {
+    color: var(--medical-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  .healthcare-result-item p {
+    color: var(--gray-600);
+    font-size: 0.75rem;
+    margin: 0.25rem 0;
+  }
+
+  .healthcare-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .healthcare-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge-type {
+    background: var(--healthcare-green);
+    color: white;
+  }
+
+  .badge-code {
+    background: var(--medical-primary);
+    color: white;
+  }
+
+  .badge-price {
+    background: var(--gray-100);
+    color: var(--gray-700);
+  }
+
+  .dropdown-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0.5rem;
+    color: var(--gray-500);
+  }
+
+  .dropdown-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+  }
+
+  .loading-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--gray-200);
+    border-top-color: var(--medical-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Update existing table styles */
+  .table-container {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    background: var(--gray-50);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+    color: var(--gray-800);
+  }
+
+  tr:hover td {
+    background: var(--gray-50);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray-500);
+  }
+
+  .empty-state p:first-child {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Notification styles */
+  .notification {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: slideIn 0.2s ease-out;
+    z-index: 100;
+  }
+
+  .notification.success {
+    background: var(--healthcare-green);
+    color: white;
+  }
+
+  .notification.error {
+    background: var(--error);
+    color: white;
+  }
+
+  .notification.warning {
+    background: var(--warning);
+    color: white;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
 `;
 
 export class PriorAuthClaimManagement extends LitElement {
@@ -704,7 +922,10 @@ export class PriorAuthClaimManagement extends LitElement {
       formData: { type: Object },
       progress: { type: Number },
       visitDetails: { type: Object },
-      supportingInfo: { type: Array }
+      supportingInfo: { type: Array },
+      servicePrices: { type: Array },
+      selectedPriceList: { type: Object },
+      facilityId: { type: Number }
     };
   }
 
@@ -745,6 +966,17 @@ export class PriorAuthClaimManagement extends LitElement {
     this.progress = 0;
     this.visitDetails = null;
     this.supportingInfo = [];
+    
+    // Add debounce timers
+    this.searchDebounceTimers = {
+      procedure: null,
+      diagnosis: null
+    };
+
+    // Initialize new properties
+    this.servicePrices = [];
+    this.selectedPriceList = null;
+    this.facilityId = null;
 
     this.addEventListener('switch-tab', this.switchTab);
   }
@@ -902,16 +1134,7 @@ export class PriorAuthClaimManagement extends LitElement {
               </h2>
             </div>
             <div class="section-content">
-              <div class="form-field dropdown-container" id="procedureDropdown">
-                <input type="text" class="form-input" id="procedureSearch" 
-                       placeholder=" " @input="${this.handleProcedureSearch}">
-                <label class="form-label" for="procedureSearch">Search Procedures</label>
-                ${this.isLoading ? html`
-                  <div class="loading-overlay">
-                    <div class="loading-spinner"></div>
-                  </div>
-                ` : ''}
-              </div>
+              ${this.renderProcedureSearch()}
               ${this.renderProcedureTable()}
             </div>
           </div>
@@ -1204,26 +1427,56 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   renderProcedureTable() {
+    if (!this.procedures?.length) {
+      return html`
+        <div class="empty-state">
+          <p>No procedures added yet</p>
+          <p class="text-sm text-gray-500">Search and select procedures above</p>
+        </div>
+      `;
+    }
+
     return html`
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>Code</th>
-              <th>Description</th>
+              <th>Service</th>
               <th>Type</th>
+              <th>CPT Code</th>
+              <th>Standard Charges</th>
+              <th>Price List</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            ${this.procedures?.map(procedure => html`
+            ${this.procedures.map(procedure => html`
               <tr>
-                <td>${procedure.code}</td>
-                <td>${procedure.description}</td>
-                <td>${procedure.type}</td>
                 <td>
-                  <button class="btn btn-secondary" @click="${() => this.removeProcedure(procedure)}">
-                    Remove
+                  <div class="flex flex-col">
+                    <span class="font-medium">${procedure.name}</span>
+                    <span class="text-sm text-gray-500">${procedure.description}</span>
+                  </div>
+                </td>
+                <td>${procedure.type}</td>
+                <td>${procedure.code}</td>
+                <td>$${procedure.charges?.toFixed(2)}</td>
+                <td>
+                  ${procedure.priceList ? html`
+                    <div class="flex flex-col">
+                      <span class="font-medium">$${procedure.priceList.price?.toFixed(2)}</span>
+                      <span class="text-xs text-gray-500">Effective: ${new Date(procedure.priceList.effectiveDate).toLocaleDateString()}</span>
+                    </div>
+                  ` : 'N/A'}
+                </td>
+                <td>
+                  <button 
+                    class="btn btn-icon text-red-500 hover:text-red-700"
+                    @click="${() => this.removeProcedure(procedure)}"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
                   </button>
                 </td>
               </tr>
@@ -1249,6 +1502,24 @@ export class PriorAuthClaimManagement extends LitElement {
         <h2>Reports</h2>
         <!-- Implement reports UI -->
       </div>
+    `;
+  }
+
+  renderProcedureSearch() {
+    return html`
+      <div class="healthcare-search">
+        <input 
+          type="text" 
+          class="form-input" 
+          id="procedureSearch"
+          placeholder="Search healthcare services..." 
+          @input="${this.handleProcedureSearch}"
+        />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <div id="procedureDropdown"></div>
     `;
   }
 
@@ -1304,34 +1575,41 @@ export class PriorAuthClaimManagement extends LitElement {
     // Set visit details
     this.visitDetails = {
       id: visit.id,
-      date: visit.date,
-      time: visit.time,
-      type: visit.type,
-      status: visit.status,
-      facility: visit.facility,
+      date: visit.visitDate,
+      time: visit.startTime,
+      type: this.getVisitTypeName(visit.fkVisitSubTypeId),
+      status: this.getVisitStatusName(visit.fkPatientVisitStatusId),
+      facility: visit.fkFacilityId,
       reasonOfVisit: visit.reasonOfVisit,
       episodeId: visit.episodeId,
-      transactionId: visit.transactionId
+      transactionId: visit.transactionIdno
     };
 
-    // Set care team from the visit's provider
-    this.careTeam = [{
-      id: visit.provider,
-      role: 'Primary Provider',
-      type: 'Provider'
-    }];
+    // Set care team from the visit's provider if available
+    if (visit.doctorId) {
+      this.careTeam = [{
+        id: visit.doctorId,
+        role: 'Primary Provider',
+        type: 'Provider'
+      }];
+    }
 
-    // Set procedures from billing details/services
-    this.procedures = visit.services.map(service => ({
-      id: service.id,
-      code: service.cptCode,
-      name: service.serviceName,
-      description: service.description,
-      provider: service.provider,
-      date: service.date,
-      charges: service.charges,
-      status: service.status
-    }));
+    // Set procedures from billing details/services if available
+    if (visit.services && Array.isArray(visit.services)) {
+      this.procedures = visit.services.map(service => ({
+        id: service.id,
+        code: service.cptCode,
+        name: service.serviceName,
+        description: service.description || 'No description available',
+        type: service.serviceTypeName || 'Service',
+        charges: service.charges || 0,
+        provider: service.provider,
+        date: service.date,
+        status: service.status
+      }));
+    } else {
+      this.procedures = [];
+    }
 
     this.updateProgress();
     this.requestUpdate();
@@ -1376,56 +1654,35 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   async handleDiagnosisSearch(event) {
-    const searchText = event.target.value;
-    if (searchText.length < 3) return;
+    const searchTerm = event.target.value;
+    if (searchTerm.length < 3) {
+      const dropdown = this.shadowRoot.querySelector('#diagnosisDropdown');
+      if (dropdown) dropdown.innerHTML = '';
+      return;
+    }
 
     this.isLoading = true;
     try {
-      const response = await fetch(API_ENDPOINTS.ICD10.PAGED, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          page: 1,
-          pageSize: 10,
-          searchText
-        })
-      });
+      // Use the correct ICD search endpoint
+      const response = await fetch(`${API_ENDPOINTS.DIAGNOSIS.SEARCH_ICDS}/${encodeURIComponent(searchTerm)}`);
+      if (!response.ok) throw new Error('Failed to fetch diagnoses');
 
       const result = await response.json();
-      if (result.isSuccessfull) {
-        // Show results in a dropdown
-        this.showDiagnosisResults(result.dynamicResult);
+      if (result.isSuccessfull && result.dynamicResult) {
+        const transformedResults = result.dynamicResult.map(diagnosis => ({
+          id: diagnosis.id,
+          code: diagnosis.icdCode,
+          description: diagnosis.description,
+          type: 'ICD-10',
+          category: diagnosis.category || 'Unknown'
+        }));
+        this.showDiagnosisResults(transformedResults);
+      } else {
+        throw new Error(result.errorMessage || 'Failed to fetch diagnoses');
       }
     } catch (error) {
       console.error('Error searching diagnoses:', error);
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  async handleProcedureSearch(event) {
-    const searchText = event.target.value;
-    if (searchText.length < 3) return;
-
-    this.isLoading = true;
-    try {
-      const response = await fetch(API_ENDPOINTS.SERVICE_DIRECTORY.PAGED, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          page: 1,
-          pageSize: 10,
-          searchText
-        })
-      });
-
-      const result = await response.json();
-      if (result.isSuccessfull) {
-        // Show results in a dropdown
-        this.showProcedureResults(result.dynamicResult);
-      }
-    } catch (error) {
-      console.error('Error searching procedures:', error);
+      this.showNotification(error.message, 'error');
     } finally {
       this.isLoading = false;
     }
@@ -1599,12 +1856,16 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   showNotification(message, type = 'info') {
-    const event = new CustomEvent('show-notification', {
-      bubbles: true,
-      composed: true,
-      detail: { message, type }
-    });
-    this.dispatchEvent(event);
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => notification.remove(), 200);
+    }, 3000);
   }
 
   showPractitionerResults(results) {
@@ -1697,37 +1958,126 @@ export class PriorAuthClaimManagement extends LitElement {
     }, { once: true });
   }
 
+  selectPractitioner(practitioner) {
+    this.careTeam = [...this.careTeam, practitioner];
+    this.updateProgress();
+    this.requestUpdate();
+  }
+
+  selectDiagnosis(diagnosis) {
+    this.diagnoses = [...this.diagnoses, diagnosis];
+    this.updateProgress();
+    this.requestUpdate();
+  }
+
+  selectVisit(visit) {
+    this.selectedVisit = visit;
+    // Process the selected visit's billing details and other information
+    this.processVisitData(visit);
+    this.requestUpdate();
+  }
+
+  // Add debounce helper method
+  debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  // Update the search handlers to use debounce
+  handleProcedureSearch = this.debounce((event) => {
+    const searchTerm = event.target.value;
+    if (searchTerm.length < 3) {
+      const dropdown = this.shadowRoot.querySelector('#procedureDropdown');
+      if (dropdown) dropdown.innerHTML = '';
+      return;
+    }
+
+    this.performProcedureSearch(searchTerm);
+  }, 300);
+
+  async performProcedureSearch(searchTerm, serviceType = null) {
+    this.isLoading = true;
+    try {
+      // Use the AutocompleteServices endpoint
+      const url = new URL(API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES);
+      url.searchParams.append('searchTerm', searchTerm);
+      if (serviceType) {
+        url.searchParams.append('serviceType', serviceType);
+      }
+
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error('Failed to fetch services');
+      
+      const result = await response.json();
+      if (result.isSuccessfull && result.dynamicResult) {
+        const transformedResults = result.dynamicResult.map(service => ({
+          id: service.id,
+          serviceName: service.name || service.serviceName,
+          description: service.description,
+          serviceTypeName: service.serviceType || service.serviceTypeName,
+          cptCode: service.cptCode,
+          standardCharges: service.charges || service.standardCharges || 0,
+          priceList: service.priceList || []
+        }));
+        this.showProcedureResults(transformedResults);
+      } else {
+        throw new Error(result.errorMessage || 'Failed to fetch services');
+      }
+    } catch (error) {
+      console.error('Error searching procedures:', error);
+      this.showNotification(error.message, 'error');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   showProcedureResults(results) {
     const container = this.shadowRoot.querySelector('#procedureDropdown');
     if (!container) return;
 
     const dropdown = document.createElement('div');
-    dropdown.className = 'dropdown-results';
+    dropdown.className = 'healthcare-results';
 
     if (this.isLoading) {
       dropdown.innerHTML = `
         <div class="dropdown-loading">
           <div class="loading-spinner"></div>
-          Searching...
+          <span>Searching...</span>
         </div>
       `;
     } else if (!results || results.length === 0) {
       dropdown.innerHTML = `
         <div class="dropdown-empty">
-          No procedures found
+          <span>No services found</span>
         </div>
       `;
     } else {
-      dropdown.innerHTML = results.map(procedure => `
-        <div class="dropdown-item" @click="${() => this.selectProcedure(procedure)}">
-          <span class="dropdown-item-title">${procedure.code} - ${procedure.description}</span>
-          <span class="dropdown-item-subtitle">${procedure.type}</span>
+      dropdown.innerHTML = results.map(service => html`
+        <div class="healthcare-result-item">
+          <h4>${service.serviceName}</h4>
+          <p>${service.description || 'No description available'}</p>
+          <div class="healthcare-badges">
+            <span class="healthcare-badge badge-type">${service.serviceTypeName || 'Unknown Type'}</span>
+            ${service.cptCode ? `<span class="healthcare-badge badge-code">CPT: ${service.cptCode}</span>` : ''}
+            <span class="healthcare-badge badge-price">$${(service.standardCharges || 0).toFixed(2)}</span>
+          </div>
         </div>
       `).join('');
+
+      // Add click handlers
+      dropdown.querySelectorAll('.healthcare-result-item').forEach((item, index) => {
+        item.addEventListener('click', () => {
+          this.selectProcedure(results[index]);
+          dropdown.remove(); // Close dropdown after selection
+        });
+      });
     }
 
     // Remove existing dropdown if any
-    const existingDropdown = container.querySelector('.dropdown-results');
+    const existingDropdown = container.querySelector('.healthcare-results');
     if (existingDropdown) {
       existingDropdown.remove();
     }
@@ -1742,22 +2092,32 @@ export class PriorAuthClaimManagement extends LitElement {
     }, { once: true });
   }
 
-  selectPractitioner(practitioner) {
-    this.careTeam = [...this.careTeam, practitioner];
-    this.updateProgress();
-    this.requestUpdate();
-  }
+  async selectProcedure(service) {
+    // Prevent duplicate services
+    if (this.procedures.some(p => p.id === service.id)) {
+      this.showNotification('This service has already been added', 'warning');
+      return;
+    }
 
-  selectDiagnosis(diagnosis) {
-    this.diagnoses = [...this.diagnoses, diagnosis];
-    this.updateProgress();
-    this.requestUpdate();
-  }
+    // Fetch latest price information
+    await this.fetchServicePrices(service.id);
+    await this.fetchPriceList(service.id);
 
-  selectProcedure(procedure) {
+    const procedure = {
+      id: service.id,
+      code: service.cptCode,
+      name: service.serviceName,
+      description: service.description || 'No description available',
+      type: service.serviceTypeName || 'Service',
+      charges: service.standardCharges || 0,
+      priceList: this.selectedPriceList,
+      prices: this.servicePrices
+    };
+
     this.procedures = [...this.procedures, procedure];
     this.updateProgress();
     this.requestUpdate();
+    this.showNotification('Service added successfully', 'success');
   }
 
   getVisitTypeName(typeId) {
@@ -1790,11 +2150,62 @@ export class PriorAuthClaimManagement extends LitElement {
     return classes[statusId] || 'status-scheduled';
   }
 
-  selectVisit(visit) {
-    this.selectedVisit = visit;
-    // Process the selected visit's billing details and other information
-    this.processVisitData(visit);
-    this.requestUpdate();
+  async fetchServicePrices(serviceId) {
+    try {
+      const response = await fetch(API_ENDPOINTS.MPDIR_SERVICE_PRICE.PAGED, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filters: `serviceId==${serviceId},isActive==true`,
+          sorts: '-effectiveFrom',
+          page: 1,
+          pageSize: 10
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch service prices');
+      
+      const result = await response.json();
+      if (result.isSuccessfull && result.dynamicResult) {
+        this.servicePrices = result.dynamicResult;
+        this.requestUpdate();
+      } else {
+        throw new Error(result.errorMessage || 'Failed to fetch service prices');
+      }
+    } catch (error) {
+      console.error('Error fetching service prices:', error);
+      this.showNotification(error.message, 'error');
+    }
+  }
+
+  async fetchPriceList(serviceId) {
+    if (!this.facilityId) return;
+
+    try {
+      const response = await fetch(API_ENDPOINTS.MPDIR_SERVICE_DIRECTORY_PRICELIST.PAGED, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filters: `serviceId==${serviceId},facilityId==${this.facilityId}`,
+          sorts: '-effectiveDate',
+          page: 1,
+          pageSize: 10
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch price list');
+      
+      const result = await response.json();
+      if (result.isSuccessfull && result.dynamicResult) {
+        this.selectedPriceList = result.dynamicResult[0] || null;
+        this.requestUpdate();
+      } else {
+        throw new Error(result.errorMessage || 'Failed to fetch price list');
+      }
+    } catch (error) {
+      console.error('Error fetching price list:', error);
+      this.showNotification(error.message, 'error');
+    }
   }
 }
 
