@@ -1,0 +1,208 @@
+{
+    "ClaimableAmount": 120.00,
+    "RequestId": "DENTAL-2024-001",
+    "ProviderLicense": {
+      "Id": "b1b3432921324f97af3be9fd0b1a14ae",
+      "LicenseNumber": "PR-FHIR",
+      "System": "http://nphies.sa/license/provider-license",
+      "Name": "Test Dental Provider",
+      "TypeNameProvider": "Dental Clinic",
+      "TypeCodeOfProvider": "5",
+      "FullName": "Test Dental Provider"
+    },
+    "PayerLicense": {
+      "Id": "bff3aa1fbd3648619ac082357bf135db",
+      "LicenseNumber": "INS-FHIR",
+      "System": "http://nphies.sa/license/payer-license",
+      "Name": "Test Payer",
+      "FullName": "Test Payer Organization"
+    },
+    "PractitionerLicense": {
+      "Id": "7",
+      "LicenseNumber": "N-P-00003",
+      "System": "http://nphies.sa/license/practitioner-license",
+      "Title": "Dr.",
+      "Name": "Amar Moustafa",
+      "FullName": "Dr. Amar Moustafa"
+    },
+    "Patient": {
+      "Identifier": "123454186",
+      "IdentifierSystem": "http://nphies.sa/identifier/iqama",
+      "FirstName": "Khaled",
+      "LastName": "Ahmad",
+      "Gender": "male",
+      "DateOfBirth": "1984-12-25",
+      "MaritalStatus": "M",
+      "Occupation": "business",
+      "PhoneNumber": "+966512345691",
+      "NationalIdentity": "2000000001"
+    },
+    "Coverage": {
+      "MemberId": "0000000001",
+      "PolicyHolderId": "13",
+      "PolicyNumber": "5009",
+      "PayorId": "bff3aa1fbd3648619ac082357bf135db",
+      "CoverageType": "EHCPOL",
+      "SubscriberId": "123454186",
+      "BeneficiaryId": "123454186",
+      "Relation": "self",
+      "RelationDisplay": "Self",
+      "CoverageTypeDisplay": "extended healthcare",
+      "CoverageStartDate": "2023-01-01",
+      "CoverageEndDate": "2029-12-31",
+      "CoverageId": "1333",
+      "CoverageClassCode": "plan",
+      "PlanCode": "CB135",
+      "PlanName": "Dental Insurance Plan",
+      "Network": "Golden C"
+    },
+    "Encounter": {
+      "Id": "1",
+      "ServiceEventCode": "DENTAL",
+      "ServiceEventDescription": "Dental restoration procedure",
+      "Status": "planned",
+      "Class": "AMB",
+      "ClassDisplay": "ambulatory",
+      "Type": "DENTAL",
+      "ServiceType": "Dental restoration service",
+      "StartDate": "2025-01-08T10:25:00+03:00",
+      "EndDate": "2025-01-08T12:30:00+03:00",
+      "PatientId": "123454186",
+      "Facility": {
+        "Identifier": "b1b3432921324f97af3be9fd0b1a14ae",
+        "Name": "Test Dental Provider",
+        "Address": {
+          "Line1": "123 Main St",
+          "City": "Riyadh",
+          "State": "Riyadh",
+          "PostalCode": "12345",
+          "Country": "SA"
+        }
+      }
+    },
+    "ClaimType": "professional",
+    "ClaimID": "DENTAL-2113071",
+    "ClaimSubType": "dental",
+    "Priority": "normal",
+    "PayeeType": "provider",
+    "PrimaryPractitioner": {
+      "PractitionerId": "7",
+      "Role": "primary",
+      "Qualification": "DDS",
+      "Specialty": "General Dentistry"
+    },
+    "CareTeam": [
+      {
+        "PractitionerId": "7",
+        "Role": "primary",
+        "Qualification": "DDS",
+        "Specialty": "General Dentistry"
+      }
+    ],
+    "Diagnoses": [
+      {
+        "Code": "K02.1",
+        "System": "http://hl7.org/fhir/sid/icd-10",
+        "Display": "Dental caries of dentine",
+        "Type": "principal",
+        "OnsetDate": "2024-01-01"
+      }
+    ],
+    "Procedures": [
+      {
+        "Code": "D2391",
+        "System": "http://nphies.sa/terminology/CodeSystem/oral-health-op",
+        "Information": "Resin-based composite - one surface, posterior",
+        "Quantity": 1,
+        "UnitPrice": 300.00,
+        "NetPrice": 300.00,
+        "Category": "restorative",
+        "RequestedDate": "2025-01-05",
+        "Location": "Dental Office",
+        "ServiceDate": "2025-01-05"
+      }
+    ],
+    "SupportingInformation": {
+      "supportingInfoElements": [
+        {
+          "sequence": 1,
+          "code": "vital-sign-systolic",
+          "value": "120"
+        },
+        {
+          "sequence": 2,
+          "code": "vital-sign-diastolic",
+          "value": "80"
+        },
+        {
+          "sequence": 3,
+          "code": "vital-sign-height",
+          "value": "170"
+        },
+        {
+          "sequence": 4,
+          "code": "vital-sign-weight",
+          "value": "75"
+        },
+        {
+          "sequence": 5,
+          "code": "pulse",
+          "value": "72"
+        },
+        {
+          "sequence": 6,
+          "code": "temperature",
+          "value": "37"
+        },
+        {
+          "sequence": 7,
+          "code": "chief-complaint",
+          "value": "Tooth pain in upper right molar"
+        },
+        {
+          "sequence": 8,
+          "code": "oxygen-saturation",
+          "value": "98"
+        },
+        {
+          "sequence": 9,
+          "code": "respiratory-rate",
+          "value": "16"
+        },
+        {
+          "sequence": 10,
+          "code": "patient-history",
+          "value": "No previous dental work on tooth 17"
+        },
+        {
+          "sequence": 11,
+          "code": "treatment-plan",
+          "value": "Composite restoration on tooth 17"
+        },
+        {
+          "sequence": 12,
+          "code": "physical-examination",
+          "value": "Visible cavity on distal surface of tooth 17"
+        },
+        {
+          "sequence": 13,
+          "code": "history-of-present-illness",
+          "value": "Patient reports tooth sensitivity for 2 weeks"
+        }
+      ]
+    },
+    "ClaimVisitID": "DENTAL-2113071",
+    "PreAuthRef": "req_13705",
+    "toothNumber": "17",
+    "procedureType": "restorative",
+    "procedures": [
+      {
+        "procedureCode": "D2391",
+        "procedureSystem": "http://nphies.sa/terminology/CodeSystem/oral-health-op",
+        "serviceDate": "2025-01-05T10:25:00+03:00",
+        "surfaceCount": 1,
+        "unitPrice": 300.00
+      }
+    ],
+    "isFollowUp": false
+  }

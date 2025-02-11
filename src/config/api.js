@@ -50,7 +50,8 @@ export const API_ENDPOINTS = {
     
     // Prior Auth endpoints
     PRIOR_AUTH: {
-        SUBMIT: `${API_URL}/api/PriorAuth/Submit`
+        SUBMIT: `${API_URL}/api/PriorAuth/Submit`,
+        DENTAL_SUBMIT: `${API_URL}/api/priorauth/dental/submit`
     },
     
     // Service Type endpoints

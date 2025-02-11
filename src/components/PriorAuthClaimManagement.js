@@ -1,5 +1,6 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import './PatientSearch.js';
+import './PriorAuthActionButtons.js';  // Add this import at the top with other imports
 import nphiesLogo from '../styles/nphies-logo-trans.png';
 import avatarImage from '../styles/avatar.png';
 import avatarBarcode from '../styles/avatar-barcode.png';
@@ -15,12 +16,12 @@ const componentStyles = css`
     background: var(--sw-background-color, #f8fafc);
     color: var(--sw-text-color, #1e293b);
     font-family: var(--sw-font-family, 'Inter', system-ui, -apple-system, sans-serif);
-    --medical-primary: #3B82F6;
+    --medical-primary: #8500d8;
     --healthcare-green: #10B981;
     --healthcare-bg: #F3F4F6;
     --primary: var(--medical-primary);
-    --primary-dark: #2563eb;
-    --primary-light: #60a5fa;
+    --primary-dark: #8500d8;
+    --primary-light:rgb(180, 59, 255);
     --success: var(--healthcare-green);
     --warning: #F59E0B;
     --error: #EF4444;
@@ -963,7 +964,8 @@ export class PriorAuthClaimManagement extends LitElement {
       supportingInfo: { type: Array },
       servicePrices: { type: Array },
       selectedPriceList: { type: Object },
-      facilityId: { type: Number }
+      facilityId: { type: Number },
+      medications: { type: Array }
     };
   }
 
@@ -1027,6 +1029,7 @@ export class PriorAuthClaimManagement extends LitElement {
       'care-team': false,
       diagnosis: false,
       procedures: false,
+      medications: false,
       supporting: false
     };
     this.isLoading = false;
@@ -1056,6 +1059,7 @@ export class PriorAuthClaimManagement extends LitElement {
     this.servicePrices = [];
     this.selectedPriceList = null;
     this.facilityId = null;
+    this.medications = [];
 
     this.addEventListener('switch-tab', this.switchTab);
   }
@@ -1105,6 +1109,13 @@ export class PriorAuthClaimManagement extends LitElement {
           ${this.activeTab === 'reports' ? this.renderReports() : ''}
         </div>
       </div>
+      
+      <prior-auth-action-buttons
+        .selectedPatient="${this.selectedPatient}"
+        .isLoading="${this.isLoading}"
+        @notification="${this.handleNotification}"
+        @close="${this.handleClose}"
+      ></prior-auth-action-buttons>
     `;
   }
 
@@ -1203,18 +1214,30 @@ export class PriorAuthClaimManagement extends LitElement {
           </div>
 
           <!-- Procedures Section -->
-          <div class="section ${this.isCollapsed('procedures') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('procedures')}">
+          ${this.renderProcedureSection()}
+
+          <!-- Medications Section -->
+          <div class="section ${this.isCollapsed('medications') ? 'collapsed' : ''}">
+            <div class="section-header" @click="${() => this.toggleSection('medications')}">
               <h2 class="section-title">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                Procedures
+                Medications
               </h2>
             </div>
             <div class="section-content">
-              ${this.renderProcedureSearch()}
-              ${this.renderProcedureTable()}
+              <div class="form-field dropdown-container" id="medicationDropdown">
+                <input type="text" class="form-input" id="medicationSearch" 
+                       placeholder=" " @input="${this.handleMedicationSearch}">
+                <label class="form-label" for="medicationSearch">Search Medications</label>
+                ${this.isLoading ? html`
+                  <div class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                  </div>
+                ` : ''}
+              </div>
+              ${this.renderMedicationTable()}
             </div>
           </div>
 
@@ -1261,26 +1284,12 @@ export class PriorAuthClaimManagement extends LitElement {
           </div>
 
           <!-- Action Buttons -->
-          <div class="action-buttons">
-            <button class="btn btn-secondary" @click="${this.handleSaveAsDraft}" ?disabled="${this.isLoading}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              Save as Draft
-            </button>
-            <button class="btn btn-secondary" @click="${this.handleValidate}" ?disabled="${this.isLoading}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Validate
-            </button>
-            <button class="btn btn-primary" @click="${this.handleSubmit}" ?disabled="${this.isLoading}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-              Submit
-            </button>
-          </div>
+          <prior-auth-action-buttons
+            .selectedPatient="${this.selectedPatient}"
+            .isLoading="${this.isLoading}"
+            @notification="${this.handleNotification}"
+            @close="${this.handleClose}"
+          ></prior-auth-action-buttons>
         ` : ''}
       </div>
       ${this.isLoading ? html`
@@ -1614,6 +1623,147 @@ export class PriorAuthClaimManagement extends LitElement {
     `;
   }
 
+  renderProcedureSection() {
+    return html`
+      <div class="section ${this.isCollapsed('procedures') ? 'collapsed' : ''}">
+        <div class="section-header" @click="${() => this.toggleSection('procedures')}">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Procedures
+          </h2>
+        </div>
+        <div class="section-content">
+          ${this.renderProcedureSearch()}
+          ${this.renderProcedureTable()}
+        </div>
+      </div>
+    `;
+  }
+
+  renderProcedureSearch() {
+    return html`
+      <div class="form-field dropdown-container" id="procedureDropdown">
+        <input type="text" class="form-input" id="procedureSearch" 
+               placeholder=" " @input="${this.handleProcedureSearch}">
+        <label class="form-label" for="procedureSearch">Search CPT Codes</label>
+        ${this.isLoading ? html`
+          <div class="loading-overlay">
+            <div class="loading-spinner"></div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  handleProcedureSearch = this.debounce(async (event) => {
+    const searchTerm = event.target.value;
+    console.log('Procedure search triggered with term:', searchTerm);
+
+    // Get or create the dropdown container
+    const container = this.shadowRoot.querySelector('#procedureDropdown');
+    let resultsContainer = container.querySelector('.dropdown-results');
+    
+    if (!resultsContainer) {
+        resultsContainer = document.createElement('div');
+        resultsContainer.className = 'dropdown-results';
+        container.appendChild(resultsContainer);
+    }
+
+    if (searchTerm?.length < 3) {
+        console.log('Search term too short, clearing results');
+        resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
+        return;
+    }
+
+    this.isLoading = true;
+    resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching procedures...</div>';
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        console.log('Raw response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Procedure search result:', result);
+
+        if (result.isSuccessfull && result.dynamicResult) {
+            console.log('Found procedures:', result.dynamicResult.length);
+            const transformedResults = result.dynamicResult.map(procedure => {
+                const standardCharges = typeof procedure.standardCharges === 'number' ? procedure.standardCharges : 
+                                      parseFloat(procedure.standardCharges) || 0;
+                return {
+                    id: procedure.id,
+                    code: procedure.cptCode,
+                    name: procedure.serviceName,
+                    description: procedure.description || procedure.cptDescription || 'No description available',
+                    type: procedure.serviceTypeName || 'Procedure',
+                    category: procedure.serviceCategory || 'Procedure',
+                    status: procedure.serviceStatus || 'Unknown',
+                    facility: procedure.facilityName || 'Unknown Facility',
+                    unitType: procedure.unitTypeName || 'Per Service',
+                    standardCharges: standardCharges,
+                    isActive: procedure.isActive
+                };
+            });
+            
+            if (transformedResults.length === 0) {
+                resultsContainer.innerHTML = '<div class="dropdown-empty">No procedures found matching your search</div>';
+            } else {
+                const procedureItems = transformedResults.map(procedure => {
+                    const procedureJson = JSON.stringify(procedure).replace(/'/g, '&apos;');
+                    return `<div class="dropdown-item" data-procedure='${procedureJson}'>
+                        <div class="dropdown-item-header">
+                            <span class="dropdown-item-title">${procedure.code || 'No CPT Code'}</span>
+                            <span class="dropdown-item-badge">${procedure.type}</span>
+                        </div>
+                        <span class="dropdown-item-short-desc">${procedure.name}</span>
+                        <span class="dropdown-item-description">${procedure.description}</span>
+                        <span class="dropdown-item-category">
+                            ${procedure.facility} - ${procedure.unitType}
+                            ${typeof procedure.standardCharges === 'number' ? ` - $${procedure.standardCharges.toFixed(2)}` : ''}
+                        </span>
+                    </div>`;
+                }).join('');
+
+                resultsContainer.innerHTML = procedureItems;
+
+                // Add click handlers
+                resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        try {
+                            const procedure = JSON.parse(item.getAttribute('data-procedure'));
+                            console.log('Selected procedure:', procedure);
+                            this.selectProcedure(procedure);
+                            resultsContainer.remove();
+                        } catch (error) {
+                            console.error('Error selecting procedure:', error);
+                            this.showNotification('Error selecting procedure', 'error');
+                        }
+                    });
+                });
+            }
+        } else {
+            throw new Error(result.errorMessage || 'Failed to fetch procedures');
+        }
+    } catch (error) {
+        console.error('Error in procedure search:', error);
+        this.showNotification(`Error searching procedures: ${error.message}`, 'error');
+        resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching procedures:</p><p>' + error.message + '</p></div>';
+    } finally {
+        this.isLoading = false;
+        this.requestUpdate();
+    }
+  }, 300);
+
   renderProcedureTable() {
     if (!this.procedures?.length) {
       return html`
@@ -1629,42 +1779,27 @@ export class PriorAuthClaimManagement extends LitElement {
         <table>
           <thead>
             <tr>
-              <th>Service</th>
-              <th>Type</th>
               <th>CPT Code</th>
-              <th>Standard Charges</th>
-              <th>Price List</th>
+              <th>Service Name</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Facility</th>
+              <th>Charges</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             ${this.procedures.map(procedure => html`
               <tr>
-                <td>
-                  <div class="flex flex-col">
-                    <span class="font-medium">${procedure.name}</span>
-                    <span class="text-sm text-gray-500">${procedure.description}</span>
-                  </div>
-                </td>
-                <td>${procedure.type}</td>
                 <td>${procedure.code}</td>
-                <td>$${procedure.charges?.toFixed(2)}</td>
+                <td>${procedure.name}</td>
+                <td>${procedure.description}</td>
+                <td>${procedure.type}</td>
+                <td>${procedure.facility}</td>
+                <td>$${typeof procedure.standardCharges === 'number' ? procedure.standardCharges.toFixed(2) : '0.00'}</td>
                 <td>
-                  ${procedure.priceList ? html`
-                    <div class="flex flex-col">
-                      <span class="font-medium">$${procedure.priceList.price?.toFixed(2)}</span>
-                      <span class="text-xs text-gray-500">Effective: ${new Date(procedure.priceList.effectiveDate).toLocaleDateString()}</span>
-                    </div>
-                  ` : 'N/A'}
-                </td>
-                <td>
-                  <button 
-                    class="btn btn-icon text-red-500 hover:text-red-700"
-                    @click="${() => this.removeProcedure(procedure)}"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
+                  <button class="btn btn-secondary" @click="${() => this.removeProcedure(procedure)}">
+                    Remove
                   </button>
                 </td>
               </tr>
@@ -1673,6 +1808,202 @@ export class PriorAuthClaimManagement extends LitElement {
         </table>
       </div>
     `;
+  }
+
+  async selectProcedure(procedure) {
+    console.log('Selecting procedure:', procedure);
+    
+    // Check for duplicates
+    if (this.procedures.some(p => p.code === procedure.code)) {
+        console.log('Duplicate procedure found');
+        this.showNotification('This procedure has already been added', 'warning');
+        return;
+    }
+
+    // Initialize procedures array if it doesn't exist
+    if (!Array.isArray(this.procedures)) {
+        console.log('Initializing procedures array');
+        this.procedures = [];
+    }
+
+    this.procedures = [...this.procedures, procedure];
+    console.log('Updated procedures list:', this.procedures);
+    
+    this.updateProgress();
+    this.requestUpdate();
+    this.showNotification('Procedure added successfully', 'success');
+  }
+
+  renderMedicationTable() {
+    if (!this.medications?.length) {
+      return html`
+        <div class="empty-state">
+          <p>No medications added yet</p>
+          <p class="text-sm text-gray-500">Search and select medications above</p>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Medication Name</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.medications.map(medication => html`
+              <tr>
+                <td>${medication.medicationName}</td>
+                <td>${new Date(medication.startDate).toLocaleDateString()}</td>
+                <td>${new Date(medication.endDate).toLocaleDateString()}</td>
+                <td>
+                  <button class="btn btn-secondary" @click="${() => this.removeMedication(medication)}">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  handleMedicationSearch = this.debounce(async (event) => {
+    console.log('handleMedicationSearch called with event:', event);
+    
+    if (!event || !event.target || !event.target.value) {
+      console.log('Invalid event or missing value:', event);
+      return;
+    }
+
+    const searchTerm = event.target.value.trim().toUpperCase();
+    console.log('Medication search triggered with term:', searchTerm);
+
+    const container = this.shadowRoot.querySelector('#medicationDropdown');
+    let resultsContainer = container.querySelector('.dropdown-results');
+    
+    if (!resultsContainer) {
+        resultsContainer = document.createElement('div');
+        resultsContainer.className = 'dropdown-results';
+        container.appendChild(resultsContainer);
+    }
+
+    if (searchTerm?.length < 3) {
+        console.log('Search term too short, clearing results');
+        resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
+        return;
+    }
+
+    this.isLoading = true;
+    resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching medications...</div>';
+
+    try {
+        const response = await fetch(API_ENDPOINTS.MEDICATION.PAGED, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filters: `MedicationName_=${searchTerm}`,
+                page: 1,
+                pageSize: 100
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Medication search result:', result);
+
+        if (result.isSuccessfull && result.dynamicResult) {
+            console.log('Found medications:', result.dynamicResult.length);
+            const transformedResults = result.dynamicResult.map(medication => ({
+                id: medication.id,
+                medicationName: medication.medicationName,
+                startDate: medication.startDate,
+                endDate: medication.endDate
+            }));
+            
+            if (transformedResults.length === 0) {
+                resultsContainer.innerHTML = '<div class="dropdown-empty">No medications found matching your search</div>';
+            } else {
+                const medicationItems = transformedResults.map(medication => {
+                    const medicationJson = JSON.stringify(medication).replace(/'/g, '&apos;');
+                    return `<div class="dropdown-item" data-medication='${medicationJson}'>
+                        <div class="dropdown-item-header">
+                            <span class="dropdown-item-title">${medication.medicationName}</span>
+                        </div>
+                        <span class="dropdown-item-description">
+                            ${new Date(medication.startDate).toLocaleDateString()} - 
+                            ${new Date(medication.endDate).toLocaleDateString()}
+                        </span>
+                    </div>`;
+                }).join('');
+
+                resultsContainer.innerHTML = medicationItems;
+
+                // Add click handlers
+                resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        try {
+                            const medication = JSON.parse(item.getAttribute('data-medication'));
+                            console.log('Selected medication:', medication);
+                            this.selectMedication(medication);
+                            resultsContainer.remove();
+                        } catch (error) {
+                            console.error('Error selecting medication:', error);
+                            this.showNotification('Error selecting medication', 'error');
+                        }
+                    });
+                });
+            }
+        } else {
+            throw new Error(result.errorMessage || 'Failed to fetch medications');
+        }
+    } catch (error) {
+        console.error('Error in medication search:', error);
+        this.showNotification(`Error searching medications: ${error.message}`, 'error');
+        resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching medications:</p><p>' + error.message + '</p></div>';
+    } finally {
+        this.isLoading = false;
+        this.requestUpdate();
+    }
+  }, 300);
+
+  selectMedication(medication) {
+    console.log('Selecting medication:', medication);
+    
+    // Check for duplicates
+    if (this.medications.some(m => m.id === medication.id)) {
+        console.log('Duplicate medication found');
+        this.showNotification('This medication has already been added', 'warning');
+        return;
+    }
+
+    // Initialize medications array if it doesn't exist
+    if (!Array.isArray(this.medications)) {
+        console.log('Initializing medications array');
+        this.medications = [];
+    }
+
+    this.medications = [...this.medications, medication];
+    console.log('Updated medications list:', this.medications);
+    
+    this.updateProgress();
+    this.requestUpdate();
+    this.showNotification('Medication added successfully', 'success');
+  }
+
+  removeMedication(medication) {
+    this.medications = this.medications.filter(m => m.id !== medication.id);
+    this.updateProgress();
+    this.requestUpdate();
   }
 
   renderClaims() {
@@ -1690,24 +2021,6 @@ export class PriorAuthClaimManagement extends LitElement {
         <h2>Reports</h2>
         <!-- Implement reports UI -->
       </div>
-    `;
-  }
-
-  renderProcedureSearch() {
-    return html`
-      <div class="healthcare-search">
-        <input 
-          type="text" 
-          class="form-input" 
-          id="procedureSearch"
-          placeholder="Search healthcare services..." 
-          @input="${this.handleProcedureSearch}"
-        />
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-      <div id="procedureDropdown"></div>
     `;
   }
 
@@ -1909,7 +2222,7 @@ export class PriorAuthClaimManagement extends LitElement {
         container.appendChild(resultsContainer);
     }
 
-    if (searchTerm.length < 3) {
+    if (searchTerm?.length < 3) {
         console.log('Search term too short, clearing results');
         resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
         return;
@@ -2048,14 +2361,32 @@ export class PriorAuthClaimManagement extends LitElement {
   async handleSubmit() {
     this.isLoading = true;
     try {
-      const formData = this.getFormData();
-      const response = await fetch(API_ENDPOINTS.PRIOR_AUTH.SUBMIT, {
+      // Get the dental prior auth template
+      const response = await fetch('/src/data/dp.json');
+      const dentalPriorAuth = await response.json();
+
+      // Update only the Patient object with selected patient's information
+      dentalPriorAuth.Patient = {
+        Identifier: this.selectedPatient.id.toString(),
+        IdentifierSystem: "http://nphies.sa/identifier/iqama",
+        FirstName: this.selectedPatient.fname || '',
+        LastName: this.selectedPatient.lname || '',
+        Gender: this.selectedPatient.gender?.toLowerCase() || 'unknown',
+        DateOfBirth: this.selectedPatient.dateOfBirth || '',
+        MaritalStatus: this.selectedPatient.maritalStatus || 'U',
+        Occupation: this.selectedPatient.occupation || '',
+        PhoneNumber: this.selectedPatient.phoneNumber || '',
+        NationalIdentity: this.selectedPatient.nationalId || ''
+      };
+
+      // Submit the prior authorization request
+      const submitResponse = await fetch(API_ENDPOINTS.PRIOR_AUTH.DENTAL_SUBMIT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dentalPriorAuth)
       });
 
-      const result = await response.json();
+      const result = await submitResponse.json();
       if (result.isSuccessfull) {
         this.showNotification('Prior authorization submitted successfully', 'success');
         this.handleClose();
@@ -2063,8 +2394,8 @@ export class PriorAuthClaimManagement extends LitElement {
         this.showNotification(result.errorMessage || 'Submission failed', 'error');
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      this.showNotification('Error submitting form', 'error');
+      console.error('Error submitting prior auth:', error);
+      this.showNotification('Error submitting prior authorization', 'error');
     } finally {
       this.isLoading = false;
     }
@@ -2092,12 +2423,9 @@ export class PriorAuthClaimManagement extends LitElement {
     }
 
   handleClose() {
-    const event = new CustomEvent('close', {
-      bubbles: true,
-      composed: true,
-      detail: { source: 'close-button' }
-    });
-    this.dispatchEvent(event);
+    // Handle closing the form
+    this.reset();
+    // Additional cleanup if needed
   }
 
   getProgressPercentage() {
@@ -2106,7 +2434,7 @@ export class PriorAuthClaimManagement extends LitElement {
 
   updateProgress() {
     let completedSteps = 0;
-    let totalSteps = 6; // Total number of sections
+    let totalSteps = 7; // Updated total number of sections
 
     // Check patient selection
     if (this.selectedPatient) completedSteps++;
@@ -2122,6 +2450,9 @@ export class PriorAuthClaimManagement extends LitElement {
 
     // Check procedures
     if (this.procedures && this.procedures.length > 0) completedSteps++;
+
+    // Check medications
+    if (this.medications && this.medications.length > 0) completedSteps++;
 
     // Check supporting info
     const hasSupporting = Object.values(this.formData.vitalSigns).some(value => value) ||
@@ -2151,7 +2482,8 @@ export class PriorAuthClaimManagement extends LitElement {
       diagnoses: this.diagnoses,
       procedures: this.procedures,
       vitalSigns: this.formData.vitalSigns,
-      clinicalInfo: this.formData.clinicalInfo
+      clinicalInfo: this.formData.clinicalInfo,
+      medications: this.medications
     };
   }
 
@@ -2231,125 +2563,6 @@ export class PriorAuthClaimManagement extends LitElement {
       clearTimeout(timeout);
       timeout = setTimeout(() => func.apply(this, args), wait);
     };
-  }
-
-  // Update the search handlers to use debounce
-  handleProcedureSearch = this.debounce(async (event) => {
-    const searchTerm = event.target.value;
-    console.log('Procedure search triggered with term:', searchTerm);
-
-    // Get or create the dropdown container
-    const container = this.shadowRoot.querySelector('#procedureDropdown');
-    let resultsContainer = container.querySelector('.dropdown-results');
-    
-    if (!resultsContainer) {
-        resultsContainer = document.createElement('div');
-        resultsContainer.className = 'dropdown-results';
-        container.appendChild(resultsContainer);
-    }
-
-    if (searchTerm.length < 3) {
-        console.log('Search term too short, clearing results');
-        resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
-        return;
-    }
-
-    this.isLoading = true;
-    resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching procedures...</div>';
-
-    try {
-        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        console.log('Raw response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Procedure search result:', result);
-
-        if (result.isSuccessfull && result.dynamicResult) {
-            console.log('Found procedures:', result.dynamicResult.length);
-            const transformedResults = result.dynamicResult.map(procedure => ({
-                id: procedure.id,
-                code: procedure.cptCode,
-                name: procedure.name || procedure.serviceName || 'Unnamed Service',
-                description: procedure.description || 'No description available',
-                type: procedure.serviceType || procedure.serviceTypeName || 'Service',
-                charges: procedure.charges || procedure.standardCharges || 0
-            }));
-            
-            if (transformedResults.length === 0) {
-                resultsContainer.innerHTML = '<div class="dropdown-empty">No procedures found matching your search</div>';
-            } else {
-                const procedureItems = transformedResults.map(procedure => {
-                    const procedureJson = JSON.stringify(procedure).replace(/'/g, '&apos;');
-                    return `<div class="dropdown-item" data-procedure='${procedureJson}'>
-                        <div class="dropdown-item-header">
-                            <span class="dropdown-item-title">${procedure.code || 'No CPT Code'}</span>
-                            <span class="dropdown-item-badge">$${(procedure.charges || 0).toFixed(2)}</span>
-                        </div>
-                        <span class="dropdown-item-short-desc">${procedure.name}</span>
-                        <span class="dropdown-item-description">${procedure.description}</span>
-                    </div>`;
-                }).join('');
-
-                resultsContainer.innerHTML = procedureItems;
-
-                // Add click handlers
-                resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        try {
-                            const procedure = JSON.parse(item.getAttribute('data-procedure'));
-                            console.log('Selected procedure:', procedure);
-                            this.selectProcedure(procedure);
-                            resultsContainer.remove();
-                        } catch (error) {
-                            console.error('Error selecting procedure:', error);
-                            this.showNotification('Error selecting procedure', 'error');
-                        }
-                    });
-                });
-            }
-        } else {
-            throw new Error(result.errorMessage || 'Failed to fetch procedures');
-        }
-    } catch (error) {
-        console.error('Error in procedure search:', error);
-        this.showNotification(`Error searching procedures: ${error.message}`, 'error');
-        resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching procedures:</p><p>' + error.message + '</p></div>';
-    } finally {
-        this.isLoading = false;
-        this.requestUpdate();
-    }
-  }, 300);
-
-  async selectProcedure(procedure) {
-    console.log('Selecting procedure:', procedure);
-    
-    // Check for duplicates
-    if (this.procedures.some(p => p.code === procedure.code)) {
-        console.log('Duplicate procedure found');
-        this.showNotification('This procedure has already been added', 'warning');
-        return;
-    }
-
-    // Initialize procedures array if it doesn't exist
-    if (!Array.isArray(this.procedures)) {
-        console.log('Initializing procedures array');
-        this.procedures = [];
-    }
-
-    this.procedures = [...this.procedures, procedure];
-    console.log('Updated procedures list:', this.procedures);
-    
-    this.updateProgress();
-    this.requestUpdate();
-    this.showNotification('Procedure added successfully', 'success');
   }
 
   showProcedureResults(results) {
@@ -2567,6 +2780,13 @@ export class PriorAuthClaimManagement extends LitElement {
     this.updateProgress();
     this.requestUpdate();
     this.showNotification('Diagnosis added successfully', 'success');
+  }
+
+  handleNotification(event) {
+    // Handle notifications from the action buttons
+    const { message, type } = event.detail;
+    // Implement your notification system here
+    console.log(`${type}: ${message}`);
   }
 }
 
