@@ -1282,14 +1282,6 @@ export class PriorAuthClaimManagement extends LitElement {
               </div>
             </div>
           </div>
-
-          <!-- Action Buttons -->
-          <prior-auth-action-buttons
-            .selectedPatient="${this.selectedPatient}"
-            .isLoading="${this.isLoading}"
-            @notification="${this.handleNotification}"
-            @close="${this.handleClose}"
-          ></prior-auth-action-buttons>
         ` : ''}
       </div>
       ${this.isLoading ? html`
