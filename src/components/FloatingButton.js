@@ -17,6 +17,26 @@ const componentStyles = css`
     right: 2rem;
   }
 
+  :host([position="bottom-right-3"]) {
+    bottom: 10rem;
+    right: 2rem;
+  }
+
+  :host([position="bottom-left-1"]) {
+    bottom: 2rem;
+    left: 2rem;
+  }
+
+  :host([position="bottom-left-2"]) {
+    bottom: 6rem;
+    left: 2rem;
+  }
+
+  :host([position="bottom-left-3"]) {
+    bottom: 10rem;
+    left: 2rem;
+  }
+
   button {
     width: 3.5rem;
     height: 3.5rem;

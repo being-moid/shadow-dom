@@ -375,21 +375,25 @@ const componentStyles = css`
 
   .action-buttons {
     display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-    padding: 1.25rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 100;
     background: white;
+    padding: 1rem;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border: 1px solid var(--gray-200);
-    position: sticky;
-    bottom: -24px;
+    width: auto;
+    min-width: 200px;
   }
 
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
     border: none;
@@ -397,11 +401,17 @@ const componentStyles = css`
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
   }
 
-  .btn svg {
-    width: 1.25rem;
-    height: 1.25rem;
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
   }
 
   .btn-secondary {
@@ -410,7 +420,7 @@ const componentStyles = css`
     color: var(--gray-700);
   }
 
-  .btn-secondary:hover {
+  .btn-secondary:hover:not(:disabled) {
     border-color: var(--gray-400);
     color: var(--gray-900);
     transform: translateY(-1px);
@@ -420,6 +430,15 @@ const componentStyles = css`
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+  }
+
+  @media (max-width: 768px) {
+    .action-buttons {
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      width: calc(100% - 2rem);
+    }
   }
 
   /* Table Styles */
@@ -2440,9 +2459,51 @@ export class PriorAuthClaimManagement extends LitElement {
     }
 
   handleClose() {
-    // Handle closing the form
     this.reset();
-    // Additional cleanup if needed
+    // Dispatch a custom event to notify parent components
+    this.dispatchEvent(new CustomEvent('close'));
+  }
+
+  reset() {
+    // Reset all component state to initial values
+    this.activeTab = 'prior-auth';
+    this.selectedPatient = null;
+    this.selectedVisit = null;
+    this.visits = [];
+    this.careTeam = [];
+    this.diagnoses = [];
+    this.procedures = [];
+    this.medications = [];
+    this.collapsedSections = {
+      patient: false,
+      visit: false,
+      'care-team': false,
+      diagnosis: false,
+      procedures: false,
+      medications: false,
+      supporting: false
+    };
+    this.isLoading = false;
+    this.formData = {
+      vitalSigns: {
+        bloodPressure: '',
+        height: '',
+        weight: ''
+      },
+      clinicalInfo: {
+        treatmentPlan: '',
+        patientHistory: '',
+        chiefComplaint: ''
+      }
+    };
+    this.progress = 0;
+    this.visitDetails = null;
+    this.supportingInfo = [];
+    this.servicePrices = [];
+    this.selectedPriceList = null;
+    
+    // Request an update to reflect the changes
+    this.requestUpdate();
   }
 
   getProgressPercentage() {
