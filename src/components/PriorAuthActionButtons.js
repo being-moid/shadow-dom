@@ -104,209 +104,113 @@ export class PriorAuthActionButtons extends LitElement {
   // Dental Prior Auth Template
   getDentalPriorAuthTemplate() {
     return {
-      "ClaimableAmount": 120.00,
-      "RequestId": "DENTAL-2024-001",
-      "ProviderLicense": {
-        "Id": "b1b3432921324f97af3be9fd0b1a14ae",
-        "LicenseNumber": "PR-FHIR",
-        "System": "http://nphies.sa/license/provider-license",
-        "Name": "Test Dental Provider",
-        "TypeNameProvider": "Dental Clinic",
-        "TypeCodeOfProvider": "5",
-        "FullName": "Test Dental Provider"
+      "requestId": "DENTAL-2024-001",
+      "encounter": {
+        "id": "ENC-2024-001",
+        "startDate": "2024-03-20T10:00:00Z",
+        "endDate": "2024-03-20T11:00:00Z",
+        "type": "outpatient",
+        "class": "AMB",
+        "classDisplay": "Ambulatory",
+        "serviceEventCode": "ICSE",
+        "serviceEventDescription": "Initial Consultation Service Event",
+        "status": "planned"
       },
-      "PayerLicense": {
-        "Id": "bff3aa1fbd3648619ac082357bf135db",
-        "LicenseNumber": "INS-FHIR",
-        "System": "http://nphies.sa/license/payer-license",
-        "Name": "Test Payer",
-        "FullName": "Test Payer Organization"
+      "providerLicense": {
+        "id": "PROV-123",
+        "name": "Dental Clinic",
+        "licenseNumber": "PR-FHIR",
+        "specialtyCode": "DENT",
+        "effectiveDate": "2024-01-01T00:00:00Z",
+        "expiryDate": "2024-12-31T23:59:59Z"
       },
-      "PractitionerLicense": {
-        "Id": "7",
-        "LicenseNumber": "N-P-00003",
-        "System": "http://nphies.sa/license/practitioner-license",
-        "Title": "Dr.",
-        "Name": "Amar Moustafa",
-        "FullName": "Dr. Amar Moustafa"
+      "payerLicense": {
+        "id": "PAYER-456",
+        "name": "Dental Insurance Co",
+        "licenseNumber": "INS-FHIR",
+        "registrationNumber": "REG-456",
+        "effectiveDate": "2024-01-01T00:00:00Z",
+        "expiryDate": "2024-12-31T23:59:59Z"
       },
-      "Patient": {
-        "Identifier": "",
-        "IdentifierSystem": "http://nphies.sa/identifier/iqama",
-        "FirstName": "",
-        "LastName": "",
-        "Gender": "",
-        "DateOfBirth": "",
-        "MaritalStatus": "",
-        "Occupation": "",
-        "PhoneNumber": "",
-        "NationalIdentity": ""
+      "practitionerLicense": {
+        "id": "DENT-789",
+        "name": "Dr. Sarah Smith",
+        "licenseNumber": "DDS-345678",
+        "specialtyCode": "GDP",
+        "effectiveDate": "2024-01-01T00:00:00Z",
+        "expiryDate": "2024-12-31T23:59:59Z"
       },
-      "Coverage": {
-        "MemberId": "0000000001",
-        "PolicyHolderId": "13",
-        "PolicyNumber": "5009",
-        "PayorId": "bff3aa1fbd3648619ac082357bf135db",
-        "CoverageType": "EHCPOL",
-        "SubscriberId": "123454186",
-        "BeneficiaryId": "123454186",
-        "Relation": "self",
-        "RelationDisplay": "Self",
-        "CoverageTypeDisplay": "extended healthcare",
-        "CoverageStartDate": "2023-01-01",
-        "CoverageEndDate": "2029-12-31",
-        "CoverageId": "1333",
-        "CoverageClassCode": "plan",
-        "PlanCode": "CB135",
-        "PlanName": "Dental Insurance Plan",
-        "Network": "Golden C"
+      "patient": {
+        "identifier": "PAT-001",
+        "identifierSystem": "urn:system:patient",
+        "firstName": "John",
+        "lastName": "Doe",
+        "gender": "male",
+        "dateOfBirth": "1990-01-01T00:00:00Z",
+        "maritalStatus": "married",
+        "phoneNumber": "+966500000000"
       },
-      "Encounter": {
-        "Id": "1",
-        "ServiceEventCode": "DENTAL",
-        "ServiceEventDescription": "Dental restoration procedure",
-        "Status": "planned",
-        "Class": "AMB",
-        "ClassDisplay": "ambulatory",
-        "Type": "DENTAL",
-        "ServiceType": "Dental restoration service",
-        "StartDate": "2025-01-08T10:25:00+03:00",
-        "EndDate": "2025-01-08T12:30:00+03:00",
-        "PatientId": "123454186",
-        "Facility": {
-          "Identifier": "b1b3432921324f97af3be9fd0b1a14ae",
-          "Name": "Test Dental Provider",
-          "Address": {
-            "Line1": "123 Main St",
-            "City": "Riyadh",
-            "State": "Riyadh",
-            "PostalCode": "12345",
-            "Country": "SA"
-          }
-        }
+      "coverage": {
+        "policyHolderId": "PH-001",
+        "payorId": "PAY-001",
+        "coverageType": "dental",
+        "subscriberId": "SUB-001",
+        "relation": "self",
+        "relationDisplay": "Self",
+        "coverageStartDate": "2024-01-01T00:00:00Z",
+        "coverageEndDate": "2024-12-31T23:59:59Z",
+        "coverageId": "COV-001",
+        "beneficiaryId": "BEN-001",
+        "coverageClassCode": "CLASS-001",
+        "planCode": "DENTAL-PLAN-001",
+        "planName": "Premium Dental Plan",
+        "network": "in-network",
+        "coverageTypeDisplay": "Dental Coverage",
+        "memberId": "MEM-001",
+        "policyNumber": "POL-001"
       },
-      "ClaimType": "professional",
-      "ClaimID": "DENTAL-2113071",
-      "ClaimSubType": "dental",
-      "Priority": "normal",
-      "PayeeType": "provider",
-      "PrimaryPractitioner": {
-        "PractitionerId": "7",
-        "Role": "primary",
-        "Qualification": "DDS",
-        "Specialty": "General Dentistry"
+      "claimType": "professional",
+      "claimSubType": "dental",
+      "priority": "normal",
+      "payeeType": "provider",
+      "claimID": "CLM-2024-001",
+      "primaryPractitioner": {
+        "practitionerId": "DENT-789",
+        "role": "primary",
+        "qualification": "DDS",
+        "specialty": "General Dentistry"
       },
-      "CareTeam": [
+      "careTeam": [
         {
-          "PractitionerId": "7",
-          "Role": "primary",
-          "Qualification": "DDS",
-          "Specialty": "General Dentistry"
+          "practitionerId": "DENT-789",
+          "role": "primary",
+          "qualification": "DDS",
+          "specialty": "General Dentistry"
         }
       ],
-      "Diagnoses": [
+      "diagnoses": [
         {
-          "Code": "K02.1",
-          "System": "http://hl7.org/fhir/sid/icd-10",
-          "Display": "Dental caries of dentine",
-          "Type": "principal",
-          "OnsetDate": "2024-01-01"
+          "code": "K02.9",
+          "system": "http://hl7.org/fhir/sid/icd-10",
+          "type": "principal",
+          "display": "Dental caries, unspecified"
         }
       ],
-      "Procedures": [
-        {
-          "Code": "D2391",
-          "System": "http://nphies.sa/terminology/CodeSystem/oral-health-op",
-          "Information": "Resin-based composite - one surface, posterior",
-          "Quantity": 1,
-          "UnitPrice": 300.00,
-          "NetPrice": 300.00,
-          "Category": "restorative",
-          "RequestedDate": "2025-01-05",
-          "Location": "Dental Office",
-          "ServiceDate": "2025-01-05"
-        }
-      ],
-      "SupportingInformation": {
-        "supportingInfoElements": [
-          {
-            "sequence": 1,
-            "code": "vital-sign-systolic",
-            "value": "120"
-          },
-          {
-            "sequence": 2,
-            "code": "vital-sign-diastolic",
-            "value": "80"
-          },
-          {
-            "sequence": 3,
-            "code": "vital-sign-height",
-            "value": "170"
-          },
-          {
-            "sequence": 4,
-            "code": "vital-sign-weight",
-            "value": "75"
-          },
-          {
-            "sequence": 5,
-            "code": "pulse",
-            "value": "72"
-          },
-          {
-            "sequence": 6,
-            "code": "temperature",
-            "value": "37"
-          },
-          {
-            "sequence": 7,
-            "code": "chief-complaint",
-            "value": "Tooth pain in upper right molar"
-          },
-          {
-            "sequence": 8,
-            "code": "oxygen-saturation",
-            "value": "98"
-          },
-          {
-            "sequence": 9,
-            "code": "respiratory-rate",
-            "value": "16"
-          },
-          {
-            "sequence": 10,
-            "code": "patient-history",
-            "value": "No previous dental work on tooth 17"
-          },
-          {
-            "sequence": 11,
-            "code": "treatment-plan",
-            "value": "Composite restoration on tooth 17"
-          },
-          {
-            "sequence": 12,
-            "code": "physical-examination",
-            "value": "Visible cavity on distal surface of tooth 17"
-          },
-          {
-            "sequence": 13,
-            "code": "history-of-present-illness",
-            "value": "Patient reports tooth sensitivity for 2 weeks"
-          }
-        ]
-      },
-      "ClaimVisitID": "DENTAL-2113071",
-      "PreAuthRef": "req_13705",
-      "toothNumber": "17",
+      "eligibilityResponseId": "ELIG-001",
+      "isOfflineEligibility": false,
+      "isTransfer": false,
+      "isNewborn": false,
       "procedureType": "restorative",
       "procedures": [
         {
           "procedureCode": "D2391",
-          "procedureSystem": "http://nphies.sa/terminology/CodeSystem/oral-health-op",
-          "serviceDate": "2025-01-05T10:25:00+03:00",
-          "surfaceCount": 1,
-          "unitPrice": 300.00
+          "system": "http://nphies.sa/terminology/CodeSystem/oral-health-op",
+          "quantity": 1,
+          "unitPrice": 300.00,
+          "serviceDate": "2024-03-20T10:00:00Z",
+          "ToothCode": "1",
+          "ToothSiteCode": "M",
+          "toothNumber": "17"
         }
       ],
       "isFollowUp": false
@@ -314,6 +218,8 @@ export class PriorAuthActionButtons extends LitElement {
   }
 
   async handleSubmit() {
+    console.log('Starting handleSubmit with selectedPatient:', this.selectedPatient);
+
     if (!this.selectedPatient) {
       this.dispatchEvent(new CustomEvent('notification', {
         detail: {
@@ -327,19 +233,19 @@ export class PriorAuthActionButtons extends LitElement {
     try {
       const dentalPriorAuth = this.getDentalPriorAuthTemplate();
       
-      // Update only the Patient object with selected patient's information
-      dentalPriorAuth.Patient = {
-        Identifier: this.selectedPatient.id?.toString() || '',
-        IdentifierSystem: "http://nphies.sa/identifier/iqama",
-        FirstName: this.selectedPatient.fname || '',
-        LastName: this.selectedPatient.lname || '',
-        Gender: (typeof this.selectedPatient.gender === 'string' ? this.selectedPatient.gender.toLowerCase() : 'unknown'),
-        DateOfBirth: this.selectedPatient.dateOfBirth || '',
-        MaritalStatus: this.selectedPatient.maritalStatus || 'U',
-        Occupation: this.selectedPatient.occupation || '',
-        PhoneNumber: this.selectedPatient.phoneNumber || '',
-        NationalIdentity: this.selectedPatient.nationalId || ''
+      // Map only the patient data, keeping the exact structure from dp.json
+      dentalPriorAuth.patient = {
+        identifier: this.selectedPatient.id ? this.selectedPatient.id.toString() : "PAT-001",
+        identifierSystem: "urn:system:patient",
+        firstName: this.selectedPatient.firstName || this.selectedPatient.fname || "John",
+        lastName: this.selectedPatient.lastName || this.selectedPatient.lname || "Doe",
+        gender: this.selectedPatient.gender?.genderName?.toLowerCase() || "male",
+        dateOfBirth: this.selectedPatient.dateOfBirth || "1990-01-01T00:00:00Z",
+        maritalStatus: "married",
+        phoneNumber: this.selectedPatient.cellPhoneNo || this.selectedPatient.phoneNumber || "+966500000000"
       };
+
+      console.log('Submitting prior auth request with body:', JSON.stringify(dentalPriorAuth, null, 2));
 
       // Submit the prior authorization request
       const response = await fetch(API_ENDPOINTS.PRIOR_AUTH.DENTAL_SUBMIT, {
@@ -348,7 +254,10 @@ export class PriorAuthActionButtons extends LitElement {
         body: JSON.stringify(dentalPriorAuth)
       });
 
+      console.log('Received response:', response);
       const result = await response.json();
+      console.log('Parsed response result:', result);
+
       if (result.isSuccessfull) {
         this.dispatchEvent(new CustomEvent('notification', {
           detail: {
@@ -361,10 +270,11 @@ export class PriorAuthActionButtons extends LitElement {
         throw new Error(result.errorMessage || 'Submission failed');
       }
     } catch (error) {
-      console.error('Error submitting prior auth:', error);
+      console.error('Error in handleSubmit:', error);
+      console.error('Error stack:', error.stack);
       this.dispatchEvent(new CustomEvent('notification', {
         detail: {
-          message: error.message || 'Error submitting prior authorization',
+          message: `Error submitting prior authorization: ${error.message}`,
           type: 'error'
         }
       }));

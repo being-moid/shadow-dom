@@ -1340,7 +1340,7 @@ export class PriorAuthClaimManagement extends LitElement {
           </div>
           <div class="info-item">
             <span class="info-label">Gender:</span>
-            <span class="info-value">${this.selectedPatient.gender}</span>
+            <span class="info-value">${this.selectedPatient.gender?.genderName || 'Unknown'}</span>
           </div>
         </div>
       </div>
