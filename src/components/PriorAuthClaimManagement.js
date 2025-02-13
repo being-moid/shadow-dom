@@ -524,13 +524,7 @@ const componentStyles = css`
 
   /* Loading States */
   .loading-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 20;
+   
   }
 
   .loading-spinner {
@@ -1930,14 +1924,10 @@ export class PriorAuthClaimManagement extends LitElement {
     resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching medications...</div>';
 
     try {
-        const response = await fetch(API_ENDPOINTS.MEDICATION.PAGED, {
-            method: 'POST',
+        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
+            method: 'GET',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                filters: `MedicationName_=${searchTerm}`,
-                page: 1,
-                pageSize: 50
-            })
+     
         });
         
         if (!response.ok) {
