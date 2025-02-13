@@ -8,6 +8,7 @@ import userIcon from '../styles/user.svg';
 import shieldIcon from '../styles/shield.svg';
 import { API_ENDPOINTS } from '../config/api.js';
 import './HealthcareServiceAutocomplete'; // Import the new component
+import './Claim.js'; // Import the ClaimComponent
 
 const componentStyles = css`
   :host {
@@ -1935,7 +1936,7 @@ export class PriorAuthClaimManagement extends LitElement {
             body: JSON.stringify({
                 filters: `MedicationName_=${searchTerm}`,
                 page: 1,
-                pageSize: 100
+                pageSize: 50
             })
         });
         
@@ -2032,12 +2033,177 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   renderClaims() {
+    // Transform clinical info into observation format
+    const observations = [
+      {
+        id: 'O1',
+        title: 'Treatment Plan',
+        date: new Date().toISOString(),
+        value: this.formData?.clinicalInfo?.treatmentPlan || 'Standard treatment protocol to be followed'
+      },
+      {
+        id: 'O2',
+        title: 'Patient History',
+        date: new Date().toISOString(),
+        value: this.formData?.clinicalInfo?.patientHistory || 'No significant past medical history'
+      },
+      {
+        id: 'O3',
+        title: 'Chief Complaint',
+        date: new Date().toISOString(),
+        value: this.formData?.clinicalInfo?.chiefComplaint || 'Patient presents with typical symptoms'
+      }
+    ];
+
+    // Transform diagnoses to match claim format
+    const formattedDiagnoses = (this.diagnoses || []).map((diagnosis, index) => ({
+      id: `D${index + 1}`,
+      code: diagnosis.code,
+      description: diagnosis.description || diagnosis.display,
+      date: new Date().toISOString(),
+      amount: diagnosis.amount || 500.00 // Default amount if not specified
+    }));
+
+    // Transform procedures to match claim format
+    const formattedProcedures = {};
+    formattedDiagnoses.forEach(diagnosis => {
+      formattedProcedures[diagnosis.id] = (this.procedures || [])
+        .filter(proc => proc.diagnosisId === diagnosis.id)
+        .map((procedure, index) => ({
+          id: `P${index + 1}`,
+          name: procedure.name || procedure.description,
+          code: procedure.code,
+          quantity: procedure.quantity || 1,
+          amount: procedure.amount || 250.00 // Default amount if not specified
+        }));
+    });
+
+    // Transform medications to match claim format
+    const formattedMedications = (this.medications || []).map((medication, index) => ({
+      id: `M${index + 1}`,
+      name: medication.name || medication.description,
+      dosage: medication.dosage || '100mg',
+      quantity: medication.quantity || 30,
+      unit: medication.unit || 'tablets',
+      amount: medication.amount || 120.00 // Default amount if not specified
+    }));
+
     return html`
       <div class="claims-container">
-        <h2>Claims Management</h2>
-        <!-- Claims content here -->
+        <claim-component
+          .claimData=${{
+            provider: {
+              id: this.selectedVisit?.facilityId || 'PR-12345',
+              name: this.selectedVisit?.facilityName || 'Healthcare Provider',
+              address: this.selectedVisit?.facilityAddress || '123 Medical Center Drive',
+              city: this.selectedVisit?.facilityCity || 'Riyadh',
+              country: 'Saudi Arabia',
+              contact: this.selectedVisit?.facilityContact || '+966 12 345 6789'
+            },
+            patient: {
+              id: this.selectedPatient?.nationalId || 'PT-67890',
+              name: this.selectedPatient ? 
+                `${this.selectedPatient.firstName || ''} ${this.selectedPatient.lastName || ''}` : 
+                'John Doe',
+              insurance: this.selectedVisit?.insuranceCompany || 'Premium Health Insurance'
+            }
+          }}
+          .selectedDiagnosis=${formattedDiagnoses}
+          .selectedProcedures=${formattedProcedures}
+          .selectedMedications=${formattedMedications}
+          .observations=${observations}
+          @claim-submit=${this.handleClaimSubmit}
+          @save-draft=${this.handleClaimDraft}
+        ></claim-component>
       </div>
     `;
+  }
+
+  async handleClaimSubmit(e) {
+    try {
+      const claimData = e.detail;
+      this.isLoading = true;
+
+      // Prepare the claim submission payload
+      const payload = {
+        visitId: this.selectedVisit.id,
+        patientId: this.selectedPatient.id,
+        facilityId: this.selectedVisit.facilityId,
+        diagnosis: claimData.diagnosis.map(d => ({
+          code: d.code,
+          description: d.description,
+          amount: d.amount,
+          procedures: this.selectedProcedures[d.id] || []
+        })),
+        medications: claimData.medications,
+        observations: claimData.observations,
+        totalAmount: parseFloat(claimData.totals.total),
+        vatAmount: parseFloat(claimData.totals.vat),
+        status: 'SUBMITTED'
+      };
+
+      // Call your API endpoint to submit the claim
+      const response = await fetch('/api/claims', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to submit claim');
+
+      this.showNotification('Claim submitted successfully', 'success');
+      this.switchTab('prior-auth');
+    } catch (error) {
+      console.error('Error submitting claim:', error);
+      this.showNotification(error.message, 'error');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async handleClaimDraft(e) {
+    try {
+      const draftData = e.detail;
+      this.isLoading = true;
+
+      // Prepare the draft payload
+      const payload = {
+        visitId: this.selectedVisit.id,
+        patientId: this.selectedPatient.id,
+        facilityId: this.selectedVisit.facilityId,
+        diagnosis: draftData.diagnosis.map(d => ({
+          code: d.code,
+          description: d.description,
+          amount: d.amount,
+          procedures: this.selectedProcedures[d.id] || []
+        })),
+        medications: draftData.medications,
+        observations: draftData.observations,
+        totalAmount: parseFloat(draftData.totals.total),
+        vatAmount: parseFloat(draftData.totals.vat),
+        status: 'DRAFT'
+      };
+
+      // Call your API endpoint to save the draft
+      const response = await fetch('/api/claims/draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to save draft');
+
+      this.showNotification('Draft saved successfully', 'success');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      this.showNotification(error.message, 'error');
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   renderReports() {
@@ -2449,14 +2615,34 @@ export class PriorAuthClaimManagement extends LitElement {
     this.procedures = this.procedures.filter(p => p.code !== procedure.code);
   }
 
-  switchTab(tab) {
-    if (typeof tab === 'object' && tab.detail) {
-      this.activeTab = tab.detail.tab;
-    } else {
-      this.activeTab = tab;
+  async switchTab(tab) {
+    if (tab === this.activeTab) return;
+
+    // Validate required data before switching to claims
+    if (tab === 'claims' && (!this.selectedPatient || !this.selectedVisit)) {
+      this.showNotification('Please select a patient and visit first', 'warning');
+      return;
     }
-        this.requestUpdate();
+
+    this.activeTab = tab;
+    
+    switch (tab) {
+      case 'prior-auth':
+        await this.fetchVisits();
+        break;
+      case 'claims':
+        // Reset any existing claim data
+        if (this.claimComponent) {
+          this.claimComponent.resetForm();
+        }
+        break;
+      case 'reports':
+        // Handle reports tab initialization if needed
+        break;
     }
+
+    this.requestUpdate();
+  }
 
   handleClose() {
     this.reset();

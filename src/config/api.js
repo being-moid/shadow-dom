@@ -47,7 +47,7 @@ export const API_ENDPOINTS = {
     },
     // Eligibility endpoints
     ELIGIBILITY: {
-        VERIFY: `${API_URL}/api/Eligibility/Verify/secondstep`
+        VERIFY: `${API_URL}/api/Eligibility/VerifyCoverage/secondstep`
     },
     
     // Prior Auth endpoints
@@ -75,7 +75,7 @@ export const API_ENDPOINTS = {
         PAGED: `${API_URL}/api/Diagnosis/GetPagedAsync`
     },
     MEDICATION: {
-        PAGED: `${API_URL}/api/Medication/GetPagedAsync`,
+        PAGED: `${API_URL}/api/IclinicsPlanofcarePrescriptiondetailsitem/GetPagedAsync`,
         SEARCH: `${API_URL}/api/Medication/Search`
     },
     CARE_TEAM: {
