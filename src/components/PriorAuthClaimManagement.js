@@ -960,6 +960,82 @@ const componentStyles = css`
     font-size: 0.75rem;
     font-style: italic;
   }
+
+  .vital-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vital-input-group input {
+    width: 100px;
+    padding: 4px 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+  }
+
+  .bp-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bp-input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+  }
+
+  textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .form-input::placeholder {
+    color: var(--gray-500);
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
 `;
 
 export class PriorAuthClaimManagement extends LitElement {
@@ -982,7 +1058,8 @@ export class PriorAuthClaimManagement extends LitElement {
       servicePrices: { type: Array },
       selectedPriceList: { type: Object },
       facilityId: { type: Number },
-      medications: { type: Array }
+      medications: { type: Array },
+      loadingStates: { type: Object }
     };
   }
 
@@ -1078,6 +1155,13 @@ export class PriorAuthClaimManagement extends LitElement {
     this.selectedPriceList = null;
     this.facilityId = null;
     this.medications = [];
+    this.loadingStates = {
+      modal: false,
+      procedures: false,
+      diagnosis: false,
+      medications: false,
+      vitals: false
+    };
 
     this.addEventListener('switch-tab', this.switchTab.bind(this));
   }
@@ -1134,6 +1218,13 @@ export class PriorAuthClaimManagement extends LitElement {
         @notification="${this.handleNotification}"
         @close="${this.handleClose}"
       ></prior-auth-action-buttons>
+      
+      ${this.loadingStates.modal ? html`
+        <div class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Processing...</div>
+        </div>
+      ` : ''}
     `;
   }
 
@@ -1221,14 +1312,19 @@ export class PriorAuthClaimManagement extends LitElement {
             </div>
             <div class="section-content">
               <div class="form-field dropdown-container" id="diagnosisDropdown">
-                <input type="text" class="form-input" id="diagnosisSearch" 
-                placeholder=" " @input="${this.handleDiagnosisSearch.bind(this)}">
-                <label class="form-label" for="diagnosisSearch">Search ICD-10</label>
-                ${this.isLoading ? html`
-                  <div class="loading-overlay">
-                    <div class="loading-spinner"></div>
-                  </div>
-                ` : ''}
+                <div class="search-input-wrapper">
+                  <input 
+                    type="text" 
+                    class="form-input" 
+                    placeholder="Search ICD-10"
+                    @input="${this.handleDiagnosisSearch}"
+                  >
+                  ${this.loadingStates.diagnosis ? html`
+                    <div class="search-loading-indicator">
+                      <div class="spinner"></div>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
               ${this.renderDiagnosisTable()}
             </div>
@@ -1249,14 +1345,19 @@ export class PriorAuthClaimManagement extends LitElement {
             </div>
             <div class="section-content">
               <div class="form-field dropdown-container" id="medicationDropdown">
-                <input type="text" class="form-input" id="medicationSearch" 
-                       placeholder=" " @input="${this.handleMedicationSearch}">
-                <label class="form-label" for="medicationSearch">Search Medications</label>
-                ${this.isLoading ? html`
-                  <div class="loading-overlay">
-                    <div class="loading-spinner"></div>
-                  </div>
-                ` : ''}
+                <div class="search-input-wrapper">
+                  <input 
+                    type="text" 
+                    class="form-input" 
+                    placeholder="Search Medications"
+                    @input="${this.handleMedicationSearch}"
+                  >
+                  ${this.loadingStates.medications ? html`
+                    <div class="search-loading-indicator">
+                      <div class="spinner"></div>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
               ${this.renderMedicationTable()}
             </div>
@@ -1306,7 +1407,8 @@ export class PriorAuthClaimManagement extends LitElement {
           </div>
         ` : ''}
       </div>
-      ${this.isLoading ? html`
+      
+      ${this.loadingStates.modal ? html`
         <div class="loading-overlay">
           <div class="loading-spinner"></div>
           <div class="loading-text">Processing...</div>
@@ -1448,14 +1550,8 @@ export class PriorAuthClaimManagement extends LitElement {
     `;
 
     const bmiRecords = this.selectedVisit.iclinicsBmis || [];
-    const bmiRecord = bmiRecords.find(bmi => bmi.visitId === this.selectedVisit.id) || bmiRecords[0];
+    const bmiRecord = bmiRecords.find(bmi => bmi.visitId === this.selectedVisit.id) || bmiRecords[0] || {};
     
-    const formatValue = (value, unit) => {
-      if (value === 0 || value === 0.0) return `0 ${unit}`;
-      if (!value) return `0 ${unit}`;
-      return `${value} ${unit}`;
-    };
-
     return html`
       <div class="vitals-container">
         ${bmiRecords.length === 0 ? html`
@@ -1474,43 +1570,94 @@ export class PriorAuthClaimManagement extends LitElement {
             <tbody>
               <tr>
                 <td>Blood Pressure</td>
-                <td>${bmiRecord?.systolic || '0'}/${bmiRecord?.diastolic || '0'} mmHg</td>
+                <td>
+                  <div class="bp-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input bp-input" 
+                      .value="${bmiRecord?.systolic || '0'}"
+                      @input="${(e) => this.updateVitalSign('systolic', e.target.value)}"
+                    />
+                    <span>/</span>
+                    <input 
+                      type="number" 
+                      class="form-input bp-input" 
+                      .value="${bmiRecord?.diastolic || '0'}"
+                      @input="${(e) => this.updateVitalSign('diastolic', e.target.value)}"
+                    />
+                    <span>mmHg</span>
+                  </div>
+                </td>
               </tr>
               <tr>
                 <td>Height</td>
-                <td>${formatValue(bmiRecord?.height, 'cm')}</td>
+                <td>
+                  <div class="vital-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input" 
+                      .value="${bmiRecord?.height || '0'}"
+                      @input="${(e) => this.updateVitalSign('height', e.target.value)}"
+                    />
+                    <span>cm</span>
+                  </div>
+                </td>
               </tr>
               <tr>
                 <td>Weight</td>
-                <td>${formatValue(bmiRecord?.weight, 'kg')}</td>
+                <td>
+                  <div class="vital-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input" 
+                      .value="${bmiRecord?.weight || '0'}"
+                      @input="${(e) => this.updateVitalSign('weight', e.target.value)}"
+                    />
+                    <span>kg</span>
+                  </div>
+                </td>
               </tr>
               <tr>
                 <td>BMI</td>
-                <td>${formatValue(bmiRecord?.bmi, 'kg/m²')}</td>
+                <td>
+                  <div class="vital-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input" 
+                      .value="${bmiRecord?.bmi || '0'}"
+                      @input="${(e) => this.updateVitalSign('bmi', e.target.value)}"
+                    />
+                    <span>kg/m²</span>
+                  </div>
+                </td>
               </tr>
               <tr>
                 <td>Temperature</td>
-                <td>${formatValue(bmiRecord?.temperature, '°C')}</td>
+                <td>
+                  <div class="vital-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input" 
+                      .value="${bmiRecord?.temperature || '0'}"
+                      @input="${(e) => this.updateVitalSign('temperature', e.target.value)}"
+                    />
+                    <span>°C</span>
+                  </div>
+                </td>
               </tr>
               <tr>
                 <td>Pulse Rate</td>
-                <td>${formatValue(bmiRecord?.pulseRate, 'bpm')}</td>
-              </tr>
-              <tr>
-                <td>SpO2</td>
-                <td>${formatValue(bmiRecord?.spo2, '%')}</td>
-              </tr>
-              <tr>
-                <td>Respiratory Rate</td>
-                <td>${formatValue(bmiRecord?.respRate, 'breaths/min')}</td>
-              </tr>
-              <tr>
-                <td>Blood Sugar</td>
-                <td>${formatValue(bmiRecord?.bloodSugar, 'mg/dL')}</td>
-              </tr>
-              <tr>
-                <td>Pain Scale</td>
-                <td>${bmiRecord?.painScale || '0'}/10</td>
+                <td>
+                  <div class="vital-input-group">
+                    <input 
+                      type="number" 
+                      class="form-input" 
+                      .value="${bmiRecord?.pulseRate || '0'}"
+                      @input="${(e) => this.updateVitalSign('pulseRate', e.target.value)}"
+                    />
+                    <span>bpm</span>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1521,16 +1668,67 @@ export class PriorAuthClaimManagement extends LitElement {
           <div class="grid grid-cols-1 gap-4">
             <div class="form-field">
               <label class="form-label">Chief Complaint</label>
-              <p class="mt-1">${bmiRecord?.chiefComplaint || 'Not specified'}</p>
+              <textarea 
+                class="form-input" 
+                rows="3"
+                .value="${bmiRecord?.chiefComplaint || ''}"
+                @input="${(e) => this.updateVitalSign('chiefComplaint', e.target.value)}"
+              ></textarea>
             </div>
             <div class="form-field">
               <label class="form-label">Comments</label>
-              <p class="mt-1">${bmiRecord?.comments || 'No comments'}</p>
+              <textarea 
+                class="form-input" 
+                rows="3"
+                .value="${bmiRecord?.comments || ''}"
+                @input="${(e) => this.updateVitalSign('comments', e.target.value)}"
+              ></textarea>
             </div>
           </div>
         </div>
       </div>
     `;
+  }
+
+  // Add method to handle vital sign updates
+  updateVitalSign(field, value) {
+    const bmiRecords = this.selectedVisit.iclinicsBmis || [];
+    let bmiRecord = bmiRecords.find(bmi => bmi.visitId === this.selectedVisit.id) || bmiRecords[0];
+    
+    if (!bmiRecord) {
+      bmiRecord = {
+        visitId: this.selectedVisit.id,
+        systolic: 0,
+        diastolic: 0,
+        height: 0,
+        weight: 0,
+        bmi: 0,
+        temperature: 0,
+        pulseRate: 0,
+        chiefComplaint: '',
+        comments: ''
+      };
+      bmiRecords.push(bmiRecord);
+    }
+
+    bmiRecord[field] = value;
+
+    // If weight or height changes, recalculate BMI
+    if (field === 'weight' || field === 'height') {
+      const weight = parseFloat(bmiRecord.weight);
+      const height = parseFloat(bmiRecord.height);
+      if (weight && height) {
+        const heightInMeters = height / 100;
+        bmiRecord.bmi = (weight / (heightInMeters * heightInMeters)).toFixed(2);
+      }
+    }
+
+    this.selectedVisit = {
+      ...this.selectedVisit,
+      iclinicsBmis: bmiRecords
+    };
+
+    this.requestUpdate();
   }
 
   renderVisitTable() {
@@ -1659,128 +1857,121 @@ export class PriorAuthClaimManagement extends LitElement {
   renderProcedureSearch() {
     return html`
       <div class="form-field dropdown-container" id="procedureDropdown">
-        <input type="text" class="form-input" id="procedureSearch" 
-               placeholder=" " @input="${this.handleProcedureSearch}">
-        <label class="form-label" for="procedureSearch">Search CPT Codes</label>
-        ${this.isLoading ? html`
-          <div class="loading-overlay">
-            <div class="loading-spinner"></div>
-          </div>
-        ` : ''}
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            class="form-input" 
+            placeholder="Search CPT Codes"
+            @input="${this.handleProcedureSearch}"
+          >
+          ${this.loadingStates.procedures ? html`
+            <div class="search-loading-indicator">
+              <div class="spinner"></div>
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
   }
 
   async handleProcedureSearch(event) {
-    console.log('handleProcedureSearch called with event:', event);
-    
-    if (!event || !event.target || !event.target.value) {
-      console.log('Invalid event or missing value:', event);
-      return;
-    }
-
-    const searchTerm = event.target.value.trim();
-    console.log('Procedure search triggered with term:', searchTerm);
-
+    const searchTerm = event.target.value?.trim();
     const container = this.shadowRoot.querySelector('#procedureDropdown');
     let resultsContainer = container.querySelector('.dropdown-results');
     
     if (!resultsContainer) {
-        resultsContainer = document.createElement('div');
-        resultsContainer.className = 'dropdown-results';
-        container.appendChild(resultsContainer);
+      resultsContainer = document.createElement('div');
+      resultsContainer.className = 'dropdown-results';
+      container.appendChild(resultsContainer);
     }
 
-    if (searchTerm?.length < 3) {
-        console.log('Search term too short, clearing results');
-        resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
-        return;
+    if (!searchTerm || searchTerm.length < 3) {
+      resultsContainer.innerHTML = '<div class="dropdown-empty">Enter at least 3 characters to search</div>';
+      return;
     }
-
-    this.isLoading = true;
-    resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching procedures...</div>';
 
     try {
-        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+      // Set only procedure loading state to true
+      this.loadingStates = { ...this.loadingStates, procedures: true };
+      this.requestUpdate();
+
+      const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.isSuccessfull && result.dynamicResult) {
+        console.log('Found procedures:', result.dynamicResult.length);
+        const transformedResults = result.dynamicResult.map(procedure => {
+          const standardCharges = typeof procedure.standardCharges === 'number' ? procedure.standardCharges : 
+                                parseFloat(procedure.standardCharges) || 0;
+          return {
+            id: procedure.id,
+            code: procedure.cptCode,
+            name: procedure.serviceName,
+            description: procedure.description || procedure.cptDescription || 'No description available',
+            type: procedure.serviceTypeName || 'Procedure',
+            category: procedure.serviceCategory || 'Procedure',
+            status: procedure.serviceStatus || 'Unknown',
+            facility: procedure.facilityName || 'Unknown Facility',
+            unitType: procedure.unitTypeName || 'Per Service',
+            standardCharges: standardCharges,
+            isActive: procedure.isActive
+          };
         });
         
-        console.log('Raw response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Procedure search result:', result);
-
-        if (result.isSuccessfull && result.dynamicResult) {
-            console.log('Found procedures:', result.dynamicResult.length);
-            const transformedResults = result.dynamicResult.map(procedure => {
-                const standardCharges = typeof procedure.standardCharges === 'number' ? procedure.standardCharges : 
-                                      parseFloat(procedure.standardCharges) || 0;
-                return {
-                    id: procedure.id,
-                    code: procedure.cptCode,
-                    name: procedure.serviceName,
-                    description: procedure.description || procedure.cptDescription || 'No description available',
-                    type: procedure.serviceTypeName || 'Procedure',
-                    category: procedure.serviceCategory || 'Procedure',
-                    status: procedure.serviceStatus || 'Unknown',
-                    facility: procedure.facilityName || 'Unknown Facility',
-                    unitType: procedure.unitTypeName || 'Per Service',
-                    standardCharges: standardCharges,
-                    isActive: procedure.isActive
-                };
-            });
-            
-            if (transformedResults.length === 0) {
-                resultsContainer.innerHTML = '<div class="dropdown-empty">No procedures found matching your search</div>';
-            } else {
-                const procedureItems = transformedResults.map(procedure => {
-                    const procedureJson = JSON.stringify(procedure).replace(/'/g, '&apos;');
-                    return `<div class="dropdown-item" data-procedure='${procedureJson}'>
-                        <div class="dropdown-item-header">
-                            <span class="dropdown-item-title">${procedure.code || 'No CPT Code'}</span>
-                            <span class="dropdown-item-badge">${procedure.type}</span>
-                        </div>
-                        <span class="dropdown-item-short-desc">${procedure.name}</span>
-                        <span class="dropdown-item-description">${procedure.description}</span>
-                        <span class="dropdown-item-category">
-                            ${procedure.facility} - ${procedure.unitType}
-                            ${typeof procedure.standardCharges === 'number' ? ` - $${procedure.standardCharges.toFixed(2)}` : ''}
-                        </span>
-                    </div>`;
-                }).join('');
-
-                resultsContainer.innerHTML = procedureItems;
-
-                // Add click handlers
-                resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        try {
-                            const procedure = JSON.parse(item.getAttribute('data-procedure'));
-                            console.log('Selected procedure:', procedure);
-                            this.selectProcedure(procedure);
-                            resultsContainer.remove();
-                        } catch (error) {
-                            console.error('Error selecting procedure:', error);
-                            this.showNotification('Error selecting procedure', 'error');
-                        }
-                    });
-                });
-            }
+        if (transformedResults.length === 0) {
+          resultsContainer.innerHTML = '<div class="dropdown-empty">No procedures found matching your search</div>';
         } else {
-            throw new Error(result.errorMessage || 'Failed to fetch procedures');
+          const procedureItems = transformedResults.map(procedure => {
+            const procedureJson = JSON.stringify(procedure).replace(/'/g, '&apos;');
+            return `<div class="dropdown-item" data-procedure='${procedureJson}'>
+                <div class="dropdown-item-header">
+                    <span class="dropdown-item-title">${procedure.code || 'No CPT Code'}</span>
+                    <span class="dropdown-item-badge">${procedure.type}</span>
+                </div>
+                <span class="dropdown-item-short-desc">${procedure.name}</span>
+                <span class="dropdown-item-description">${procedure.description}</span>
+                <span class="dropdown-item-category">
+                    ${procedure.facility} - ${procedure.unitType}
+                    ${typeof procedure.standardCharges === 'number' ? ` - $${procedure.standardCharges.toFixed(2)}` : ''}
+                </span>
+            </div>`;
+          }).join('');
+
+          resultsContainer.innerHTML = procedureItems;
+
+          // Add click handlers
+          resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+              try {
+                const procedure = JSON.parse(item.getAttribute('data-procedure'));
+                console.log('Selected procedure:', procedure);
+                this.selectProcedure(procedure);
+                resultsContainer.remove();
+              } catch (error) {
+                console.error('Error selecting procedure:', error);
+                this.showNotification('Error selecting procedure', 'error');
+              }
+            });
+          });
         }
+      } else {
+        throw new Error(result.errorMessage || 'Failed to fetch procedures');
+      }
     } catch (error) {
-        console.error('Error in procedure search:', error);
-        this.showNotification(`Error searching procedures: ${error.message}`, 'error');
-        resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching procedures:</p><p>' + error.message + '</p></div>';
+      console.error('Error searching procedures:', error);
+      resultsContainer.innerHTML = `<div class="dropdown-error">Error: ${error.message}</div>`;
     } finally {
-        this.isLoading = false;
-        this.requestUpdate();
+      // Reset only procedure loading state
+      this.loadingStates = { ...this.loadingStates, procedures: false };
+      this.requestUpdate();
     }
   }
 
@@ -2551,7 +2742,7 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   async handleSubmit() {
-    this.isLoading = true;
+    this.loadingStates = { ...this.loadingStates, modal: true };
     try {
       // Get the dental prior auth template
       const response = await fetch('/src/data/dp.json');
@@ -2589,7 +2780,7 @@ export class PriorAuthClaimManagement extends LitElement {
       console.error('Error submitting prior auth:', error);
       this.showNotification('Error submitting prior authorization', 'error');
     } finally {
-      this.isLoading = false;
+      this.loadingStates = { ...this.loadingStates, modal: false };
     }
   }
 
