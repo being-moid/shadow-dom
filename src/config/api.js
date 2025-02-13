@@ -1,4 +1,4 @@
-const API_URL = 'http://80.238.230.182:8081';
+const API_URL = 'https://localhost:7006';
 
 export const API_ENDPOINTS = {
     // Insurance Company endpoints
@@ -42,10 +42,12 @@ export const API_ENDPOINTS = {
     FACILITY: {
         PAGED: `${API_URL}/api/buildingmanagementfacility/getpagedasync`
     },
-    
+    PREAUTHORIZATION: {
+        PAGED: `${API_URL}/api/PreAuthorization/GetPagedAsync`
+    },
     // Eligibility endpoints
     ELIGIBILITY: {
-        VERIFY: `${API_URL}/api/Eligibility/Verify`
+        VERIFY: `${API_URL}/api/Eligibility/Verify/secondstep`
     },
     
     // Prior Auth endpoints
