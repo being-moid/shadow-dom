@@ -1405,23 +1405,23 @@ const componentStyles = css`
   }
 
   .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #463AA1;
+    width: 4rem;
+    height: 4rem;
+    border: 4px solid #E5E7EB;
+    border-top: 4px solid #463AA1;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
   }
 
   .loading-text {
-    margin-top: 1rem;
-    color: #463AA1;
+    color: #1F2937;
+    font-size: 1.125rem;
     font-weight: 500;
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
   }
 `;
 
@@ -1429,6 +1429,7 @@ export class CoverageVerification extends LitElement {
   static get properties() {
     return {
       activeTab: { type: String },
+      isMappingLoader: { type: Boolean },
       selectedPatient: { type: Object },
       insuranceInfo: { type: Object },
       isVerifying: { type: Boolean },
@@ -1919,6 +1920,7 @@ export class CoverageVerification extends LitElement {
   constructor() {
     super();
     this.activeTab = 'coverage';
+    this.isMappingLoader = false;
     this.selectedPatient = null;
     this.isVerifying = false;
     this.isVerified = false;
@@ -2205,9 +2207,9 @@ export class CoverageVerification extends LitElement {
         const verifyButton = this.shadowRoot.querySelector('.verify-button');
         verifyButton.classList.add('success-animation');
 
-        // Transition to benefits tab after a short delay
+        // Transition to contract setup instead of benefits
         setTimeout(() => {
-          this.activeTab = 'benefits';
+          this.activeTab = 'contract';
           this.requestUpdate();
         }, 1500);
 
@@ -2618,6 +2620,12 @@ export class CoverageVerification extends LitElement {
     
     return html`
       <div class="benefits-section">
+        ${this.isMappingLoader ? html`
+          <div class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Mapping Benefits...</div>
+          </div>
+        ` : null}
         <button 
           class="auto-map-all-button"
           @click="${this.autoMapAllServiceTypes}"
@@ -2770,7 +2778,7 @@ export class CoverageVerification extends LitElement {
         ${!this.isMappingComplete ? html`
           <button 
             class="map-benefits-button"
-            @click="${() => this.completeMappingAndProceed()}"
+            @click="${async () => await this.completeMappingAndProceed()}"
           >
             COMPLETE MAPPING
           </button>
@@ -2780,92 +2788,63 @@ export class CoverageVerification extends LitElement {
   }
 
   async autoMapAllServiceTypes() {
-    this.isAutoMapping = true;
-    this.autoMappingProgress = 0;
-    this.lastAutoMapResult = '';
-    let totalMapped = 0;
-    
-    try {
-      // Calculate total potential mappings for progress
-      const totalPotentialMappings = this.serviceTypes.reduce((total, serviceType) => {
-        const availableBenefits = this.getAvailableBenefitsForType(serviceType.id);
-        return total + availableBenefits.filter(benefit => 
-          getIntelligentMapping(benefit, serviceType.id)
-        ).length;
-      }, 0);
+    if (!this.availableBenefits || !this.serviceTypes) return;
 
-      // Process each service type
-      for (let i = 0; i < this.serviceTypes.length; i++) {
-        const serviceType = this.serviceTypes[i];
-        const availableBenefits = this.getAvailableBenefitsForType(serviceType.id);
-        let mappedForType = 0;
+    // Reset all existing mappings first
+    this.serviceTypes = this.serviceTypes.map(type => ({
+        ...type,
+        mapped: []
+    }));
 
-        if (!serviceType.mapped) {
-          serviceType.mapped = [];
+    // Create a map to store best matches for each service type
+    const serviceTypeMappings = new Map();
+
+    // For each service type, find the most relevant benefits
+    for (const serviceType of this.serviceTypes) {
+        const mappedBenefits = await this.autoMapBenefits(serviceType.id);
+        if (mappedBenefits.length > 0) {
+            serviceTypeMappings.set(serviceType.id, mappedBenefits);
         }
-
-        // Map benefits for this service type
-        availableBenefits.forEach(benefit => {
-          if (getIntelligentMapping(benefit, serviceType.id)) {
-            if (!serviceType.mapped.some(mapped => mapped.id === benefit.id)) {
-              serviceType.mapped.push(benefit);
-              mappedForType++;
-              totalMapped++;
-            }
-          }
-        });
-
-        // Update progress
-        this.autoMappingProgress = Math.round((totalMapped / totalPotentialMappings) * 100);
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for visual feedback
-        this.requestUpdate();
-      }
-
-      this.lastAutoMapResult = `Successfully mapped ${totalMapped} benefits across all service types`;
-    } catch (error) {
-      console.error('Error during auto-mapping:', error);
-      this.lastAutoMapResult = 'Error occurred during auto-mapping';
-    } finally {
-      this.isAutoMapping = false;
-      this.requestUpdate();
     }
-  }
 
-  autoMapBenefits(serviceTypeId) {
-    const availableBenefits = this.getAvailableBenefitsForType(serviceTypeId);
+    // Update the service types with their mapped benefits
+    this.serviceTypes = this.serviceTypes.map(type => ({
+        ...type,
+        mapped: serviceTypeMappings.get(type.id) || []
+    }));
+
+    // Update the UI
+    this.requestUpdate();
+    
+    // Show success notification
+    this.dispatchEvent(new CustomEvent('show-notification', {
+        detail: {
+            message: 'Benefits have been automatically mapped',
+            type: 'success'
+        },
+        bubbles: true,
+        composed: true
+    }));
+}
+
+  async autoMapBenefits(serviceTypeId) {
     const serviceType = this.serviceTypes.find(type => type.id === serviceTypeId);
-    let mappedCount = 0;
-    
-    if (!serviceType.mapped) {
-      serviceType.mapped = [];
-    }
+    if (!serviceType) return [];
 
-    availableBenefits.forEach(benefit => {
-      if (getIntelligentMapping(benefit, serviceTypeId)) {
-        // Only map if not already mapped
-        if (!serviceType.mapped.some(mapped => mapped.id === benefit.id)) {
-          serviceType.mapped.push(benefit);
-          mappedCount++;
-        }
-      }
+    // Get all available benefits that haven't been mapped yet
+    const availableBenefits = this.getAvailableBenefitsForType(serviceTypeId);
+    
+    // Use the intelligent mapping logic from benefitMappings.js
+    const mappedBenefits = availableBenefits.filter(benefit => {
+        return getIntelligentMapping(benefit, serviceTypeId);
     });
 
-    // Show success message if any benefits were mapped
-    if (mappedCount > 0) {
-      const button = this.shadowRoot.querySelector('.auto-map-button');
-      button.style.background = '#059669';
-      button.textContent = `${mappedCount} Benefits Mapped`;
-      setTimeout(() => {
-        button.style.background = '';
-        button.textContent = 'Auto Recommended Mapping';
-      }, 2000);
-    }
-
-    this.requestUpdate();
+    return mappedBenefits;
   }
 
   async completeMappingAndProceed() {
     // Validate all recommended benefits are mapped
+    this.isMappingLoader = true;
     let unmappedRecommended = false;
     this.serviceTypes.forEach(serviceType => {
       const availableBenefits = this.getAvailableBenefitsForType(serviceType.id);
@@ -2885,8 +2864,7 @@ export class CoverageVerification extends LitElement {
       }
     }
 
-    this.isMappingComplete = true;
-    this.requestUpdate();
+   
 
     // Construct mapping payload object
     const mappingPayload = {
@@ -2911,14 +2889,16 @@ export class CoverageVerification extends LitElement {
         },
         body: JSON.stringify(mappingPayload)
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to submit mapping payload');
       }
 
       const result = await response.json();
       console.log('Mapping payload submission result:', result);
-
+      this.isMappingComplete = true;
+      this.isMappingLoader = false;
+      this.requestUpdate();
       const successEvent = new CustomEvent('show-notification', {
         bubbles: true,
         composed: true,
@@ -2930,6 +2910,7 @@ export class CoverageVerification extends LitElement {
       this.dispatchEvent(successEvent);
     } catch (err) {
       console.error(err);
+      this.isMappingLoader = false;
       const errorEvent = new CustomEvent('show-notification', {
         bubbles: true,
         composed: true,

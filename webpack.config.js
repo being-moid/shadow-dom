@@ -55,8 +55,13 @@ module.exports = {
         ],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        type: 'asset/resource',
+        test: /\.(png|jpe?g|gif|svg|webp|ico|bmp|tiff?)$/i,
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 8 * 1024 // 8kb - inline if less than this size
+          }
+        },
         generator: {
           filename: 'images/[hash][ext][query]'
         }

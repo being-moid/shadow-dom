@@ -1,14 +1,14 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import './PatientSearch.js';
-import './PriorAuthActionButtons.js';  // Add this import at the top with other imports
+import './PriorAuthActionButtons.js';
 import nphiesLogo from '../styles/nphies-logo-trans.png';
 import avatarImage from '../styles/avatar.png';
 import avatarBarcode from '../styles/avatar-barcode.png';
 import userIcon from '../styles/user.svg';
 import shieldIcon from '../styles/shield.svg';
 import { API_ENDPOINTS } from '../config/api.js';
-import './HealthcareServiceAutocomplete'; // Import the new component
-import './Claim.js'; // Import the ClaimComponent
+import './HealthcareServiceAutocomplete';
+import './Claim.js';
 
 const componentStyles = css`
   :host {
@@ -81,6 +81,7 @@ const componentStyles = css`
     font-weight: 500;
     margin: 0;
     line-height: 1.2;
+    color: white;
   }
 
   /* Update tabs */
@@ -176,16 +177,20 @@ const componentStyles = css`
 
   /* Update progress bar */
   .progress-bar {
-    background: var(--success);
+    height: 100%;
+    background: var(--healthcare-green);
+    transition: width 0.3s ease;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
   }
 
   /* Update other button styles */
   .btn-primary {
-    background: var(--primary);
+    background: var(--primary) !important;
   }
 
   .btn-primary:hover {
-    background: var(--primary-dark);
+    background: var(--primary-dark) !important;
   }
 
   .wrapper {
@@ -206,7 +211,8 @@ const componentStyles = css`
   .header-content {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
+    flex: 1;
   }
 
   .nphies-logo {
@@ -221,6 +227,7 @@ const componentStyles = css`
     background: rgba(255, 255, 255, 0.2);
     border-radius: 0.25rem;
     overflow: hidden;
+    margin-top: 0.75rem;
   }
 
   .content {
@@ -406,12 +413,12 @@ const componentStyles = css`
   }
 
   .btn-primary {
-    background: var(--primary);
+    background: var(--primary) !important;
     color: white;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--primary-dark);
+    background: var(--primary-dark) !important;
     transform: translateY(-1px);
   }
 
@@ -1036,6 +1043,63 @@ const componentStyles = css`
     position: relative;
     width: 100%;
   }
+
+  .submit-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .submit-status {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    min-width: 300px;
+  }
+
+  .submit-status.submitting {
+    border-left: 4px solid var(--primary-color);
+  }
+
+  .submit-status.success {
+    border-left: 4px solid var(--success-color, #4CAF50);
+  }
+
+  .submit-status.error {
+    border-left: 4px solid var(--error-color, #f44336);
+  }
+
+  .loader {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1rem;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .submit-status p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
 `;
 
 export class PriorAuthClaimManagement extends LitElement {
@@ -1058,8 +1122,11 @@ export class PriorAuthClaimManagement extends LitElement {
       servicePrices: { type: Array },
       selectedPriceList: { type: Object },
       facilityId: { type: Number },
-      medications: { type: Array },
-      loadingStates: { type: Object }
+      loadingStates: { type: Object },
+      payloadObject: { type: Object },
+      isSubmitting: { type: Boolean },
+      submitStatus: { type: String }, // 'idle' | 'submitting' | 'success' | 'error'
+      submitMessage: { type: String }
     };
   }
 
@@ -1104,6 +1171,63 @@ export class PriorAuthClaimManagement extends LitElement {
           font-size: 0.75rem;
           font-style: italic;
         }
+
+        .submit-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+
+        .submit-status {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          min-width: 300px;
+        }
+
+        .submit-status.submitting {
+          border-left: 4px solid var(--primary-color);
+        }
+
+        .submit-status.success {
+          border-left: 4px solid var(--success-color, #4CAF50);
+        }
+
+        .submit-status.error {
+          border-left: 4px solid var(--error-color, #f44336);
+        }
+
+        .loader {
+          display: inline-block;
+          width: 40px;
+          height: 40px;
+          margin-bottom: 1rem;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid var(--primary-color);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .submit-status p {
+          margin: 0;
+          color: var(--text-color);
+          font-size: 1rem;
+          line-height: 1.5;
+        }
       `
     ];
   }
@@ -1136,34 +1260,230 @@ export class PriorAuthClaimManagement extends LitElement {
       },
       clinicalInfo: {
         treatmentPlan: '',
-        patientHistory: '',
-        chiefComplaint: ''
+        patientHistory: ''
       }
     };
     this.progress = 0;
     this.visitDetails = null;
     this.supportingInfo = [];
-    
-    // Add debounce timers
-    this.searchDebounceTimers = {
-      procedure: null,
-      diagnosis: null
-    };
-
-    // Initialize new properties
     this.servicePrices = [];
     this.selectedPriceList = null;
     this.facilityId = null;
-    this.medications = [];
-    this.loadingStates = {
-      modal: false,
-      procedures: false,
-      diagnosis: false,
-      medications: false,
-      vitals: false
-    };
+    this.loadingStates = {};
+    this.payloadObject = { ...PriorAuthClaimManagement.PayloadObject };
+    this.isSubmitting = false;
+    this.submitStatus = 'idle';
+    this.submitMessage = '';
+  }
 
-    this.addEventListener('switch-tab', this.switchTab.bind(this));
+  updatePayloadObject() {
+    // Update patient information
+    if (this.selectedPatient) {
+      this.payloadObject.patient = {
+        identifier: this.selectedPatient.nic || this.selectedPatient.id?.toString(),
+        identifierSystem: "http://nphies.sa/identifier/iqama",
+        firstName: this.selectedPatient.firstName || this.selectedPatient.arFname,
+        middleName: this.selectedPatient.middleName,
+        lastName: this.selectedPatient.lastName || this.selectedPatient.arLname,
+        gender: this.selectedPatient.gender?.genderName?.toLowerCase() || 'unknown',
+        dateOfBirth: this.selectedPatient.dateOfBirth,
+        maritalStatus: this.selectedPatient.maritalStatus?.status || 'U',
+        occupation: '',  // Not available in the data
+        phoneNumber: this.selectedPatient.cellPhoneNo || this.selectedPatient.homePhoneNo || this.selectedPatient.officePhoneNo,
+        nationalIdentity: this.selectedPatient.nic,
+        address: {
+          line1: this.selectedPatient.address || this.selectedPatient.arAddress || 'N/A',
+          city: this.selectedPatient.city?.cityName,
+          state: this.selectedPatient.city?.stateName,
+          postalCode: this.selectedPatient.postalCode,
+          country: this.selectedPatient.nationality?.countryName || this.selectedPatient.city?.country?.countryName
+        },
+        insurance: this.selectedPatient.patientInsurances?.[0] ? {
+          memberId: this.selectedPatient.patientInsurances[0].memberId,
+          planName: this.selectedPatient.patientInsurances[0].fkPlan?.planName,
+          planCode: this.selectedPatient.patientInsurances[0].fkPlan?.planCode,
+          companyName: this.selectedPatient.patientInsurances[0].payer?.companyName,
+          startDate: this.selectedPatient.patientInsurances[0].startDate,
+          expiryDate: this.selectedPatient.patientInsurances[0].expiryDate,
+          priority: this.selectedPatient.patientInsurances[0].insurancePriority,
+          relationshipToSubscriber: this.selectedPatient.patientInsurances[0].memberRelationTo
+        } : null
+      };
+    }
+
+    // Update encounter/visit information
+    if (this.selectedVisit) {
+      this.payloadObject.encounter = {
+        id: this.selectedVisit.id,
+        startDate: this.selectedVisit.startDate,
+        endDate: this.selectedVisit.endDate,
+        type: this.selectedVisit.type || "outpatient",
+        class: this.selectedVisit.class || "AMB",
+        classDisplay: this.selectedVisit.classDisplay || "Ambulatory",
+        serviceEventCode: this.selectedVisit.serviceEventCode || "ICSE",
+        serviceEventDescription: this.selectedVisit.description,
+        status: this.selectedVisit.status || "planned"
+      };
+    }
+
+    // Update care team
+    this.payloadObject.careTeam = this.careTeam.map(member => ({
+      practitionerId: member.id,
+      role: member.role || "primary",
+      qualification: member.qualification,
+      specialty: member.specialty
+    }));
+
+    // Update diagnoses
+    this.payloadObject.diagnoses = this.diagnoses.map(diagnosis => ({
+      code: diagnosis.code,
+      system: "http://hl7.org/fhir/sid/icd-10",
+      type: diagnosis.type || "principal",
+      display: diagnosis.description
+    }));
+
+    // Update procedures
+    this.payloadObject.procedures = this.procedures.map(procedure => ({
+      procedureCode: procedure.code,
+      system: "http://nphies.sa/terminology/CodeSystem/oral-health-op",
+      quantity: procedure.quantity || 1,
+      unitPrice: procedure.amount,
+      serviceDate: procedure.serviceDate || this.selectedVisit?.startDate,
+      ToothCode: procedure.toothCode,
+      ToothSiteCode: procedure.toothSiteCode,
+      toothNumber: procedure.toothNumber
+    }));
+
+    // Update clinical information
+    if (this.formData?.clinicalInfo) {
+      this.payloadObject.clinicalInformation = {
+        treatmentPlan: this.formData.clinicalInfo.treatmentPlan,
+        patientHistory: this.formData.clinicalInfo.patientHistory
+      };
+    }
+
+    // Dispatch event with updated payload
+    this.dispatchEvent(new CustomEvent('payload-updated', {
+      detail: { payload: this.payloadObject }
+    }));
+  }
+
+  // Add handlers for form input changes
+  async handlePatientSelect(event) {
+    this.isLoading = true;
+    try {
+      const patientData = event.detail;
+      this.selectedPatient = patientData;
+
+      // Map insurance coverage to payload
+      if (patientData.insuranceCoverages && patientData.insuranceCoverages[0]) {
+        const coverage = patientData.insuranceCoverages[0];
+        this.payloadObject.coverage = {
+          subscriberId: coverage.subscriberId,
+          membershipNumber: coverage.membershipNumber,
+          coverageType: coverage.coverageType,
+          relationshipToSubscriber: coverage.relationshipToSubscriber,
+          insuranceCompany: coverage.insuranceCompany,
+          planType: coverage.planType,
+          effectiveDate: coverage.effectiveDate,
+          expiryDate: coverage.expiryDate
+        };
+      }
+      
+      // Check if visits are already included in patient data
+      if (patientData.visitmanagementVisits) {
+        this.visits = patientData.visitmanagementVisits;
+        if (this.visits.length > 0) {
+          this.selectVisit(this.visits[0]);
+        }
+      } else {
+        // Fetch visits only if not included in patient data
+        await this.fetchVisits();
+      }
+      
+      this.updateProgress();
+    } catch (error) {
+      console.error('Error handling patient selection:', error);
+      this.showNotification('Error loading patient data', 'error');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async fetchVisits() {
+    if (!this.selectedPatient) return;
+    
+    this.isLoading = true;
+    try {
+      const response = await fetch(API_ENDPOINTS.VISIT.PAGED, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          page: 1,
+          pageSize: 10,
+          filters: "patientId==" + this.selectedPatient.id
+        })
+      });
+      
+      const result = await response.json();
+      if (result.isSuccessfull && result.dynamicResult) {
+        // Map visit management visits
+        if (result.dynamicResult[0]?.visitmanagementVisits) {
+          this.visits = result.dynamicResult[0].visitmanagementVisits;
+        } else {
+          this.visits = result.dynamicResult;
+        }
+
+        if (this.visits.length > 0) {
+          this.selectVisit(this.visits[0]);
+          
+          // Update payload with visit information
+          this.payloadObject.visit = {
+            id: this.visits[0].id,
+            startDate: this.visits[0].startDate,
+            endDate: this.visits[0].endDate,
+            type: this.visits[0].type,
+            status: this.visits[0].status,
+            facility: this.visits[0].facilityId,
+            provider: this.visits[0].providerId
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+      this.showNotification('Error loading visit data', 'error');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  handleVisitSelect(event) {
+    this.selectedVisit = event.detail;
+    this.updatePayloadObject();
+  }
+
+  handleCareTeamUpdate(event) {
+    this.careTeam = event.detail;
+    this.updatePayloadObject();
+  }
+
+  handleDiagnosisUpdate(event) {
+    this.diagnoses = event.detail;
+    this.updatePayloadObject();
+  }
+
+  handleProcedureUpdate(event) {
+    this.procedures = event.detail;
+    this.updatePayloadObject();
+  }
+
+  handleClinicalInfoUpdate(event) {
+    const { name, value } = event.target;
+    this.formData.clinicalInfo = {
+      ...this.formData.clinicalInfo,
+      [name]: value
+    };
+    this.updatePayloadObject();
   }
 
   firstUpdated() {
@@ -1173,16 +1493,24 @@ export class PriorAuthClaimManagement extends LitElement {
   render() {
     return html`
       <div class="wrapper">
+        ${this.isSubmitting ? html`
+          <div class="submit-overlay">
+            <div class="submit-status ${this.submitStatus}">
+              <div class="loader"></div>
+              <p>${this.submitMessage}</p>
+            </div>
+          </div>
+        ` : ''}
         <div class="sticky-header">
           <div class="header">
             <img src="${nphiesLogo}" class="nphies-logo" alt="NPHIES">
             <div class="header-content">
-              <h1 class="header-title">Prior Auth & Claim Management Center</h1>
+              <h1 class="header-title">Prior Authorization Request</h1>
               <div class="progress-indicator">
-                <div class="progress-bar" style="width: ${this.getProgressPercentage()}%"></div>
+                <div class="progress-bar" style="width: ${this.progress}%"></div>
               </div>
             </div>
-            <button class="close-button" @click="${this.handleClose.bind(this)}">
+            <button class="close-button" @click="${this.close}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -1194,226 +1522,247 @@ export class PriorAuthClaimManagement extends LitElement {
                  @click="${() => this.switchTab('prior-auth')}">
               PRIOR AUTH
             </div>
-            <div class="tab ${this.activeTab === 'claims' ? 'active' : ''}"
-                 @click="${() => this.switchTab('claims')}">
-              CLAIMS
-            </div>
-            <div class="tab ${this.activeTab === 'reports' ? 'active' : ''}"
-                 @click="${() => this.switchTab('reports')}">
-              REPORTS
-            </div>
           </div>
         </div>
 
         <div class="content">
-          ${this.activeTab === 'prior-auth' ? this.renderPriorAuth() : ''}
-          ${this.activeTab === 'claims' ? this.renderClaims() : ''}
-          ${this.activeTab === 'reports' ? this.renderReports() : ''}
-        </div>
-      </div>
-      
-      <prior-auth-action-buttons
-        .selectedPatient="${this.selectedPatient}"
-        .isLoading="${this.isLoading}"
-        @notification="${this.handleNotification}"
-        @close="${this.handleClose}"
-      ></prior-auth-action-buttons>
-      
-      ${this.loadingStates.modal ? html`
-        <div class="loading-overlay">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Processing...</div>
-        </div>
-      ` : ''}
-    `;
-  }
-
-  renderPriorAuth() {
-    return html`
-      <div class="prior-auth-container">
-        <!-- Patient Information Section -->
-        <div class="section ${this.isCollapsed('patient') ? 'collapsed' : ''}">
-          <div class="section-header" @click="${() => this.toggleSection('patient')}">
-            <h2 class="section-title">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Patient Information
-            </h2>
-            <span class="tooltip" 
-                  data-tooltip="${this.selectedPatient ? 'Patient information complete' : 'Search and select patient'}"
-                  data-status="${this.selectedPatient ? 'complete' : 'pending'}">
-              ${this.selectedPatient ? '✓ Complete' : 'Pending'}
-            </span>
-          </div>
-          <div class="section-content">
-            ${!this.selectedPatient ? html`
-              <patient-search 
-              @patient-selected="${this.handlePatientSelected.bind(this)}"
-                .loading="${this.isLoading}"
-              ></patient-search>
-            ` : this.renderPatientInfo()}
-          </div>
-        </div>
-
-        ${this.selectedPatient ? html`
-          <!-- Visit/Episode Selection Section -->
-          <div class="section ${this.isCollapsed('visit') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('visit')}">
-              <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Visit/Episode Selection
-              </h2>
+          <div class="prior-auth-container">
+            <!-- Patient Section -->
+            <div class="section ${this.collapsedSections.patient ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('patient')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Patient Information
+                </h2>
+              </div>
+              <div class="section-content">
+                <patient-search 
+                  @patient-selected="${async (event) => this.handlePatientSelect(event) }"
+                  .selectedPatient="${this.selectedPatient}">
+                </patient-search>
+              </div>
             </div>
-            <div class="section-content">
-              ${this.renderVisitDetails()}
-            </div>
-          </div>
 
-          <!-- Care Team Section -->
-          <div class="section ${this.isCollapsed('care-team') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('care-team')}">
-              <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Care Team
-              </h2>
-            </div>
-            <div class="section-content">
-              <div class="form-field dropdown-container" id="practitionerDropdown">
-                <input type="text" class="form-input" id="practitionerSearch" 
-                placeholder=" " @input="${this.handlePractitionerSearch.bind(this)}">
-                <label class="form-label" for="practitionerSearch">Search Practitioner</label>
-                ${this.isLoading ? html`
-                  <div class="loading-overlay">
-                    <div class="loading-spinner"></div>
+            <!-- Visit Section -->
+            <div class="section ${this.collapsedSections.visit ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('visit')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Visit Details
+                </h2>
+              </div>
+              <div class="section-content">
+                ${this.selectedPatient ? html`
+                  <div class="visit-table-container">
+                    ${this.visits && this.visits.length > 0 ? html`
+                      <table class="visit-table">
+                        <thead>
+                          <tr>
+                            <th>Visit ID</th>
+                            <th>Visit Date</th>
+                            <th>Visit Type</th>
+                            <th>Status</th>
+                            <th>Episode ID</th>
+                            <th>Transaction ID</th>
+                            <th>Facility</th>
+                            <th>Provider</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${this.visits.map(visit => html`
+                            <tr class="${this.selectedVisit?.id === visit.id ? 'selected' : ''}">
+                              <td>${visit.id || 'N/A'}</td>
+                              <td>${visit.startDate ? new Date(visit.startDate).toLocaleDateString() : 'N/A'}</td>
+                              <td>${visit.type || 'Regular Visit'}</td>
+                              <td>
+                                <span class="status-badge ${this.getStatusClass(visit.status)}">
+                                  ${visit.status || 'Scheduled'}
+                                </span>
+                              </td>
+                              <td>${visit.episodeId || 'N/A'}</td>
+                              <td>${visit.transactionIdno || 'N/A'}</td>
+                              <td>${visit.facilityName || visit.fkFacilityId || 'N/A'}</td>
+                              <td>${visit.doctorName || visit.doctorId || 'N/A'}</td>
+                              <td>
+                                <button 
+                                  class="btn-select"
+                                  ?disabled="${this.selectedVisit?.id === visit.id}"
+                                  @click="${() => this.handleVisitSelect({ detail: visit })}"
+                                >
+                                  ${this.selectedVisit?.id === visit.id ? 'Selected' : 'Select'}
+                                </button>
+                              </td>
+                            </tr>
+                          `)}
+                        </tbody>
+                      </table>
+                    ` : html`
+                      <div class="empty-state">
+                        <p>No visits found for this patient</p>
+                      </div>
+                    `}
                   </div>
-                ` : ''}
+                ` : html`
+                  <div class="empty-state">
+                    <p>Please select a patient first</p>
+                  </div>
+                `}
               </div>
-              ${this.renderCareTeam()}
             </div>
-          </div>
 
-          <!-- Diagnosis Section -->
-          <div class="section ${this.isCollapsed('diagnosis') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('diagnosis')}">
-              <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 00-2-2V5a2 2 0 00-2 2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Diagnosis
-              </h2>
-            </div>
-            <div class="section-content">
-              <div class="form-field dropdown-container" id="diagnosisDropdown">
-                <div class="search-input-wrapper">
-                  <input 
-                    type="text" 
-                    class="form-input" 
-                    placeholder="Search ICD-10"
-                    @input="${this.handleDiagnosisSearch}"
-                  >
-                  ${this.loadingStates.diagnosis ? html`
-                    <div class="search-loading-indicator">
-                      <div class="spinner"></div>
-                    </div>
-                  ` : ''}
+            <!-- Care Team Section -->
+            <div class="section ${this.collapsedSections['care-team'] ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('care-team')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Care Team
+                </h2>
+              </div>
+              <div class="section-content">
+                <div class="form-field dropdown-container" id="practitionerDropdown">
+                  <input type="text" class="form-input" id="practitionerSearch" 
+                    placeholder=" " @input="${this.handlePractitionerSearch}">
+                  <label class="form-label" for="practitionerSearch">Search Practitioner</label>
                 </div>
+                ${this.renderCareTeam()}
               </div>
-              ${this.renderDiagnosisTable()}
             </div>
-          </div>
 
-          <!-- Procedures Section -->
-          ${this.renderProcedureSection()}
-
-          <!-- Medications Section -->
-          <div class="section ${this.isCollapsed('medications') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('medications')}">
-              <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                Medications
-              </h2>
-            </div>
-            <div class="section-content">
-              <div class="form-field dropdown-container" id="medicationDropdown">
-                <div class="search-input-wrapper">
-                  <input 
-                    type="text" 
-                    class="form-input" 
-                    placeholder="Search Medications"
-                    @input="${this.handleMedicationSearch}"
-                  >
-                  ${this.loadingStates.medications ? html`
-                    <div class="search-loading-indicator">
-                      <div class="spinner"></div>
-                    </div>
-                  ` : ''}
+            <!-- Diagnosis Section -->
+            <div class="section ${this.collapsedSections.diagnosis ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('diagnosis')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Diagnosis
+                </h2>
+              </div>
+              <div class="section-content">
+                <div class="form-field dropdown-container" id="diagnosisDropdown">
+                  <input type="text" class="form-input" id="diagnosisSearch" 
+                    placeholder=" " @input="${this.handleDiagnosisSearch}">
+                  <label class="form-label" for="diagnosisSearch">Search ICD-10 Code</label>
                 </div>
+                ${this.renderDiagnosisTable()}
               </div>
-              ${this.renderMedicationTable()}
             </div>
-          </div>
 
-          <!-- Supporting Information Section -->
-          <div class="section ${this.isCollapsed('supporting') ? 'collapsed' : ''}">
-            <div class="section-header" @click="${() => this.toggleSection('supporting')}">
-              <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Supporting Information
-              </h2>
+            <!-- Medications Section -->
+            <div class="section ${this.collapsedSections.medications ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('medications')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Medications
+                </h2>
+              </div>
+              <div class="section-content">
+                <div class="form-field dropdown-container" id="medicationDropdown">
+                  <input type="text" class="form-input" id="medicationSearch" 
+                    placeholder="Search medications" @input="${this.handleMedicationSearch}">
+                  <label class="form-label" for="medicationSearch">Search Medications</label>
+                </div>
+                ${this.medications && this.medications.length > 0 ? html`
+                  <div class="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Code</th>
+                          <th>Name</th>
+                          <th>Dosage</th>
+                          <th>Quantity</th>
+                          <th>Unit</th>
+                          <th>Amount</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${this.medications.map(med => html`
+                          <tr>
+                            <td>${med.code || 'N/A'}</td>
+                            <td>${med.name || 'N/A'}</td>
+                            <td>${med.dosage || 'N/A'}</td>
+                            <td>${med.quantity || 'N/A'}</td>
+                            <td>${med.unit || 'N/A'}</td>
+                            <td>SAR ${(med.amount || 0).toFixed(2)}</td>
+                            <td>
+                              <button class="btn btn-secondary" @click="${() => this.removeMedication(med)}">
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        `)}
+                      </tbody>
+                    </table>
+                  </div>
+                ` : html`
+                  <div class="empty-state">
+                    <p>No medications added yet</p>
+                    <p class="text-sm text-gray-500">Search and select medications above</p>
+                  </div>
+                `}
+              </div>
             </div>
-            <div class="section-content">
-              <!-- Vitals Information -->
-              <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4">Vitals Information</h3>
+
+            <!-- Supporting Information Section -->
+            <div class="section ${this.collapsedSections.supporting ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('supporting')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Supporting Information
+                </h2>
+              </div>
+              <div class="section-content">
                 ${this.renderVitals()}
               </div>
+            </div>
 
-              <div class="form-grid">
-                <div class="form-field">
-                  <textarea class="form-input" id="treatmentPlan" rows="3" 
-                          placeholder=" " .value="${this.formData.clinicalInfo.treatmentPlan}"
-                          @input="${e => this.updateFormData('clinicalInfo', 'treatmentPlan', e.target.value)}"></textarea>
-                  <label class="form-label" for="treatmentPlan">Treatment Plan</label>
-                  <div class="character-counter">${this.formData.clinicalInfo.treatmentPlan.length}/500</div>
-                </div>
-                <div class="form-field">
-                  <textarea class="form-input" id="patientHistory" rows="3" 
-                          placeholder=" " .value="${this.formData.clinicalInfo.patientHistory}"
-                          @input="${e => this.updateFormData('clinicalInfo', 'patientHistory', e.target.value)}"></textarea>
-                  <label class="form-label" for="patientHistory">Patient History</label>
-                </div>
+            <!-- Procedures Section -->
+            <div class="section ${this.collapsedSections.procedures ? 'collapsed' : ''}">
+              <div class="section-header" @click="${() => this.toggleSection('procedures')}">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Procedures
+                </h2>
               </div>
-              <div class="form-field">
-                <div class="file-upload-container">
-                  <input type="file" class="form-input" id="supportingDocs" 
-                  multiple @change="${this.handleFileUpload.bind(this)}">
-                  <label class="form-label" for="supportingDocs">Supporting Documents</label>
-                </div>
+              <div class="section-content">
+                <healthcare-service-autocomplete
+                  @service-selected="${this.handleProcedureUpdate}"
+                  .selectedServices="${this.procedures}">
+                </healthcare-service-autocomplete>
+                ${this.renderProcedureSection()}
               </div>
             </div>
           </div>
-        ` : ''}
-      </div>
-      
-      ${this.loadingStates.modal ? html`
-        <div class="loading-overlay">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Processing...</div>
         </div>
-      ` : ''}
+
+        <!-- Action Buttons -->
+        <prior-auth-action-buttons
+          .selectedPatient="${this.selectedPatient}"
+          .selectedVisit="${this.selectedVisit}"
+          .careTeam="${this.careTeam}"
+          .diagnoses="${this.diagnoses}"
+          .procedures="${this.procedures}"
+          .clinicalInfo="${this.formData.clinicalInfo}"
+          .payloadObject="${this.payloadObject}"
+          @save-draft="${this.handleSaveAsDraft}"
+          @validate="${this.handleValidate}"
+          @submit="${this.handleSubmit}">
+        </prior-auth-action-buttons>
+      </div>
     `;
   }
 
@@ -1456,9 +1805,9 @@ export class PriorAuthClaimManagement extends LitElement {
         <table class="visit-table">
           <thead>
             <tr>
+              <th>Visit ID</th>
               <th>Visit Date</th>
-              <th>Time</th>
-              <th>Type</th>
+              <th>Visit Type</th>
               <th>Status</th>
               <th>Episode ID</th>
               <th>Transaction ID</th>
@@ -1470,18 +1819,18 @@ export class PriorAuthClaimManagement extends LitElement {
           <tbody>
             ${this.visits.map(visit => html`
               <tr class="${this.selectedVisit?.id === visit.id ? 'selected' : ''}">
-                <td>${new Date(visit.visitDate).toLocaleDateString()}</td>
-                <td>${visit.startTime}</td>
-                <td>${this.getVisitTypeName(visit.fkVisitSubTypeId)}</td>
+                <td>${visit.id || 'N/A'}</td>
+                <td>${visit.startDate ? new Date(visit.startDate).toLocaleDateString() : 'N/A'}</td>
+                <td>${visit.type || 'Regular Visit'}</td>
                 <td>
-                  <span class="status-badge ${this.getStatusClass(visit.fkPatientVisitStatusId)}">
-                    ${this.getVisitStatusName(visit.fkPatientVisitStatusId)}
+                  <span class="status-badge ${this.getStatusClass(visit.status)}">
+                    ${visit.status || 'Scheduled'}
                   </span>
                 </td>
-                <td>${visit.episodeId}</td>
-                <td>${visit.transactionIdno}</td>
-                <td>${visit.fkFacilityId}</td>
-                <td>${visit.doctorId}</td>
+                <td>${visit.episodeId || 'N/A'}</td>
+                <td>${visit.transactionIdno || 'N/A'}</td>
+                <td>${visit.facilityName || visit.fkFacilityId || 'N/A'}</td>
+                <td>${visit.doctorName || visit.doctorId || 'N/A'}</td>
                 <td>
                   <button 
                     class="btn-select"
@@ -1521,7 +1870,7 @@ export class PriorAuthClaimManagement extends LitElement {
             </tr>
           </thead>
           <tbody>
-            ${this.careTeam.map(member => html`
+        ${this.careTeam.map(member => html`
               <tr>
                 <td>${member.id}</td>
                 <td>${member.pinNo || 'N/A'}</td>
@@ -1538,7 +1887,7 @@ export class PriorAuthClaimManagement extends LitElement {
             `)}
           </tbody>
         </table>
-      </div>
+            </div>
     `;
   }
 
@@ -1546,292 +1895,71 @@ export class PriorAuthClaimManagement extends LitElement {
     if (!this.selectedVisit) return html`
       <div class="empty-state">
         <p>No vitals information available</p>
+        <p>Please select a visit first</p>
       </div>
     `;
 
-    const bmiRecords = this.selectedVisit.iclinicsBmis || [];
-    const bmiRecord = bmiRecords.find(bmi => bmi.visitId === this.selectedVisit.id) || bmiRecords[0] || {};
-    
     return html`
       <div class="vitals-container">
-        ${bmiRecords.length === 0 ? html`
-          <div class="alert alert-info mb-4">
-            No vitals were performed in this visit
+        <div class="form-grid">
+          <!-- Vital Signs -->
+          <div class="form-group">
+            <h3 class="form-subtitle">Vital Signs</h3>
+            <div class="vital-input-group">
+              <div class="form-field">
+                <label class="form-label">Blood Pressure</label>
+                <div class="bp-input-group">
+                  <input type="text" class="form-input bp-input" 
+                    .value="${this.formData.vitalSigns.bloodPressure}"
+                    @input="${(e) => this.updateFormData('vitalSigns', 'bloodPressure', e.target.value)}">
+                  <span>mmHg</span>
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Height</label>
+                <div class="vital-input-group">
+                  <input type="number" class="form-input" 
+                    .value="${this.formData.vitalSigns.height}"
+                    @input="${(e) => this.updateFormData('vitalSigns', 'height', e.target.value)}">
+                  <span>cm</span>
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Weight</label>
+                <div class="vital-input-group">
+                  <input type="number" class="form-input" 
+                    .value="${this.formData.vitalSigns.weight}"
+                    @input="${(e) => this.updateFormData('vitalSigns', 'weight', e.target.value)}">
+                  <span>kg</span>
+                </div>
+              </div>
+            </div>
           </div>
-        ` : ''}
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Vital Sign</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Blood Pressure</td>
-                <td>
-                  <div class="bp-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input bp-input" 
-                      .value="${bmiRecord?.systolic || '0'}"
-                      @input="${(e) => this.updateVitalSign('systolic', e.target.value)}"
-                    />
-                    <span>/</span>
-                    <input 
-                      type="number" 
-                      class="form-input bp-input" 
-                      .value="${bmiRecord?.diastolic || '0'}"
-                      @input="${(e) => this.updateVitalSign('diastolic', e.target.value)}"
-                    />
-                    <span>mmHg</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Height</td>
-                <td>
-                  <div class="vital-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input" 
-                      .value="${bmiRecord?.height || '0'}"
-                      @input="${(e) => this.updateVitalSign('height', e.target.value)}"
-                    />
-                    <span>cm</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Weight</td>
-                <td>
-                  <div class="vital-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input" 
-                      .value="${bmiRecord?.weight || '0'}"
-                      @input="${(e) => this.updateVitalSign('weight', e.target.value)}"
-                    />
-                    <span>kg</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>BMI</td>
-                <td>
-                  <div class="vital-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input" 
-                      .value="${bmiRecord?.bmi || '0'}"
-                      @input="${(e) => this.updateVitalSign('bmi', e.target.value)}"
-                    />
-                    <span>kg/m²</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Temperature</td>
-                <td>
-                  <div class="vital-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input" 
-                      .value="${bmiRecord?.temperature || '0'}"
-                      @input="${(e) => this.updateVitalSign('temperature', e.target.value)}"
-                    />
-                    <span>°C</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Pulse Rate</td>
-                <td>
-                  <div class="vital-input-group">
-                    <input 
-                      type="number" 
-                      class="form-input" 
-                      .value="${bmiRecord?.pulseRate || '0'}"
-                      @input="${(e) => this.updateVitalSign('pulseRate', e.target.value)}"
-                    />
-                    <span>bpm</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
 
-        <div class="clinical-info mt-4">
-          <h3 class="text-lg font-semibold mb-2">Clinical Information</h3>
-          <div class="grid grid-cols-1 gap-4">
+          <!-- Clinical Information -->
+          <div class="form-group">
+            <h3 class="form-subtitle">Clinical Information</h3>
+            <div class="form-field">
+              <label class="form-label">Treatment Plan</label>
+              <textarea class="form-input" name="treatmentPlan" rows="4"
+                .value="${this.formData.clinicalInfo.treatmentPlan}"
+                @input="${this.handleClinicalInfoUpdate}"></textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Patient History</label>
+              <textarea class="form-input" name="patientHistory" rows="4"
+                .value="${this.formData.clinicalInfo.patientHistory}"
+                @input="${this.handleClinicalInfoUpdate}"></textarea>
+            </div>
             <div class="form-field">
               <label class="form-label">Chief Complaint</label>
-              <textarea 
-                class="form-input" 
-                rows="3"
-                .value="${bmiRecord?.chiefComplaint || ''}"
-                @input="${(e) => this.updateVitalSign('chiefComplaint', e.target.value)}"
-              ></textarea>
-            </div>
-            <div class="form-field">
-              <label class="form-label">Comments</label>
-              <textarea 
-                class="form-input" 
-                rows="3"
-                .value="${bmiRecord?.comments || ''}"
-                @input="${(e) => this.updateVitalSign('comments', e.target.value)}"
-              ></textarea>
+              <textarea class="form-input" name="chiefComplaint" rows="4"
+                .value="${this.formData.clinicalInfo.chiefComplaint}"
+                @input="${this.handleClinicalInfoUpdate}"></textarea>
             </div>
           </div>
         </div>
       </div>
-    `;
-  }
-
-  // Add method to handle vital sign updates
-  updateVitalSign(field, value) {
-    const bmiRecords = this.selectedVisit.iclinicsBmis || [];
-    let bmiRecord = bmiRecords.find(bmi => bmi.visitId === this.selectedVisit.id) || bmiRecords[0];
-    
-    if (!bmiRecord) {
-      bmiRecord = {
-        visitId: this.selectedVisit.id,
-        systolic: 0,
-        diastolic: 0,
-        height: 0,
-        weight: 0,
-        bmi: 0,
-        temperature: 0,
-        pulseRate: 0,
-        chiefComplaint: '',
-        comments: ''
-      };
-      bmiRecords.push(bmiRecord);
-    }
-
-    bmiRecord[field] = value;
-
-    // If weight or height changes, recalculate BMI
-    if (field === 'weight' || field === 'height') {
-      const weight = parseFloat(bmiRecord.weight);
-      const height = parseFloat(bmiRecord.height);
-      if (weight && height) {
-        const heightInMeters = height / 100;
-        bmiRecord.bmi = (weight / (heightInMeters * heightInMeters)).toFixed(2);
-      }
-    }
-
-    this.selectedVisit = {
-      ...this.selectedVisit,
-      iclinicsBmis: bmiRecords
-    };
-
-    this.requestUpdate();
-  }
-
-  renderVisitTable() {
-    return html`
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Provider</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this.visits?.map(visit => html`
-              <tr>
-                <td>${visit.date}</td>
-                <td>${visit.type}</td>
-                <td>${visit.provider}</td>
-                <td>${visit.status}</td>
-                <td>
-                  <button class="btn btn-secondary" @click="${() => this.selectVisit(visit)}">
-                    Select
-                  </button>
-                </td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  renderCareTeamTable() {
-    return html`
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Specialty</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this.careTeam?.map(member => html`
-              <tr>
-                <td>${member.name}</td>
-                <td>${member.role}</td>
-                <td>${member.specialty}</td>
-                <td>
-                  <button class="btn btn-secondary" @click="${() => this.removeCareTeamMember(member)}">
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  renderDiagnosisTable() {
-    if (!this.diagnoses?.length) {
-        return html`
-            <div class="empty-state">
-                <p>No diagnoses added yet</p>
-                <p class="text-sm text-gray-500">Search and select ICD codes above</p>
-            </div>
-        `;
-    }
-
-    return html`
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ICD Code</th>
-                        <th>Short Description</th>
-                        <th>Description</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${this.diagnoses.map(diagnosis => html`
-                        <tr>
-                            <td>${diagnosis.code}</td>
-                            <td>${diagnosis.shortDescription}</td>
-                            <td>${diagnosis.description}</td>
-                            <td>
-                                <button class="btn btn-secondary" @click="${() => this.removeDiagnosis(diagnosis)}">
-                                    Remove
-                                </button>
-                            </td>
-                        </tr>
-                    `)}
-                </tbody>
-            </table>
-        </div>
     `;
   }
 
@@ -2046,34 +2174,31 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   renderMedicationTable() {
-    if (!this.medications?.length) {
-      return html`
-        <div class="empty-state">
-          <p>No medications added yet</p>
-          <p class="text-sm text-gray-500">Search and select medications above</p>
-        </div>
-      `;
-    }
-
     return html`
       <div class="table-container">
-        <table>
+        <table class="data-table">
           <thead>
             <tr>
-              <th>Medication Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Action</th>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Dosage</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Amount</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${this.medications.map(medication => html`
+            ${this.medications.map(med => html`
               <tr>
-                <td>${medication.medicationName}</td>
-                <td>${new Date(medication.startDate).toLocaleDateString()}</td>
-                <td>${new Date(medication.endDate).toLocaleDateString()}</td>
+                <td>${med.code}</td>
+                <td>${med.name}</td>
+                <td>${med.dosage}</td>
+                <td>${med.quantity}</td>
+                <td>${med.unit}</td>
+                <td>SAR ${med.amount.toFixed(2)}</td>
                 <td>
-                  <button class="btn btn-secondary" @click="${() => this.removeMedication(medication)}">
+                  <button class="btn btn-secondary" @click="${() => this.removeMedication(med)}">
                     Remove
                   </button>
                 </td>
@@ -2086,131 +2211,292 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   async handleMedicationSearch(event) {
-    console.log('handleMedicationSearch called with event:', event);
-    
-    if (!event || !event.target || !event.target.value) {
-      console.log('Invalid event or missing value:', event);
-      return;
-    }
-
     const searchTerm = event.target.value.trim().toUpperCase();
     console.log('Medication search triggered with term:', searchTerm);
 
+    if (searchTerm.length < 2) {
+        const container = this.shadowRoot.querySelector('#medicationDropdown');
+        if (container) {
+            const resultsContainer = container.querySelector('.dropdown-results');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = '';
+            }
+        }
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}&serviceTypeId=3`);
+        if (!response.ok) throw new Error('Failed to fetch medications');
+        
+        const data = await response.json();
+        console.log('API Response:', data);
+        
+        if (data.isSuccessfull && data.dynamicResult) {
+            const results = data.dynamicResult;
+            console.log('Processed Results:', results);
+            
+            if (results.length > 0) {
+                this.showMedicationResults(results);
+            } else {
+                const container = this.shadowRoot.querySelector('#medicationDropdown');
+                if (container) {
+                    let resultsContainer = container.querySelector('.dropdown-results');
+                    if (!resultsContainer) {
+                        resultsContainer = document.createElement('div');
+                        resultsContainer.className = 'dropdown-results';
+                        container.appendChild(resultsContainer);
+                    }
+                    resultsContainer.innerHTML = '<div class="dropdown-empty">No medications found</div>';
+                }
+            }
+        } else {
+            throw new Error(data.errorMessage || 'Failed to fetch medications');
+        }
+    } catch (error) {
+        console.error('Error searching medications:', error);
+        this.showNotification('Error searching medications', 'error');
+    }
+}
+
+showMedicationResults(results) {
+    console.log('Showing medication results:', results);
     const container = this.shadowRoot.querySelector('#medicationDropdown');
+    if (!container) {
+        console.error('Medication dropdown container not found');
+        return;
+    }
+
     let resultsContainer = container.querySelector('.dropdown-results');
-    
     if (!resultsContainer) {
         resultsContainer = document.createElement('div');
         resultsContainer.className = 'dropdown-results';
         container.appendChild(resultsContainer);
     }
 
-    if (searchTerm?.length < 3) {
-        console.log('Search term too short, clearing results');
-        resultsContainer.innerHTML = '<div class="dropdown-empty">Please enter at least 3 characters to search</div>';
+    if (!Array.isArray(results) || results.length === 0) {
+        resultsContainer.innerHTML = '<div class="dropdown-empty">No medications found</div>';
         return;
     }
 
-    this.isLoading = true;
-    resultsContainer.innerHTML = '<div class="dropdown-loading"><div class="loading-spinner"></div>Searching medications...</div>';
+    resultsContainer.innerHTML = results.map(med => `
+        <div class="dropdown-item" data-id="${med.id}">
+            <div class="dropdown-item-header">
+                <span class="dropdown-item-title">${med.serviceName || 'N/A'}</span>
+                <span class="dropdown-item-badge">SAR ${med.standardCharges?.toFixed(2) || '0.00'}</span>
+            </div>
+            <div class="dropdown-item-content">
+                <span class="dropdown-item-description">${med.description || 'No description available'}</span>
+                <div class="dropdown-item-details">
+                    <span class="dropdown-item-facility">${med.facilityName || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
 
-    try {
-        const response = await fetch(`${API_ENDPOINTS.MASTER_PRICE_SERVICE_DIRECTORY.AUTOCOMPLETE_SERVICES}?searchTerm=${encodeURIComponent(searchTerm)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-     
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Medication search result:', result);
-
-        if (result.isSuccessfull && result.dynamicResult) {
-            console.log('Found medications:', result.dynamicResult.length);
-            const transformedResults = result.dynamicResult.map(medication => ({
-                id: medication.id,
-                medicationName: medication.medicationName,
-                startDate: medication.startDate,
-                endDate: medication.endDate
-            }));
-            
-            if (transformedResults.length === 0) {
-                resultsContainer.innerHTML = '<div class="dropdown-empty">No medications found matching your search</div>';
-            } else {
-                const medicationItems = transformedResults.map(medication => {
-                    const medicationJson = JSON.stringify(medication).replace(/'/g, '&apos;');
-                    return `<div class="dropdown-item" data-medication='${medicationJson}'>
-                        <div class="dropdown-item-header">
-                            <span class="dropdown-item-title">${medication.medicationName}</span>
-                        </div>
-                        <span class="dropdown-item-description">
-                            ${new Date(medication.startDate).toLocaleDateString()} - 
-                            ${new Date(medication.endDate).toLocaleDateString()}
-                        </span>
-                    </div>`;
-                }).join('');
-
-                resultsContainer.innerHTML = medicationItems;
-
-                // Add click handlers
-                resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        try {
-                            const medication = JSON.parse(item.getAttribute('data-medication'));
-                            console.log('Selected medication:', medication);
-                            this.selectMedication(medication);
-                            resultsContainer.remove();
-                        } catch (error) {
-                            console.error('Error selecting medication:', error);
-                            this.showNotification('Error selecting medication', 'error');
-                        }
-                    });
-                });
+    // Add click handlers
+    resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const medId = item.getAttribute('data-id');
+            const selectedMed = results.find(m => m.id === parseInt(medId));
+            console.log('Selected medication:', selectedMed);
+            if (selectedMed) {
+                this.promptForDosage(selectedMed);
             }
-        } else {
-            throw new Error(result.errorMessage || 'Failed to fetch medications');
+            resultsContainer.innerHTML = '';
+        });
+    });
+}
+
+promptForDosage(medication) {
+    console.log('Prompting for dosage:', medication);
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <style>
+            .btn-primary {
+                background-color: var(--medical-primary) !important;
+                color: white !important;
+                border: none !important;
+                padding: 8px 16px !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
+            }
+            .btn-primary:hover {
+                background-color: var(--primary-dark) !important;
+                transform: translateY(-1px) !important;
+            }
+            .btn-secondary {
+                background-color: white !important;
+                color: var(--gray-700) !important;
+                border: 1px solid var(--gray-300) !important;
+                padding: 8px 16px !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
+                margin-right: 8px !important;
+            }
+            .btn-secondary:hover {
+                border-color: var(--gray-400) !important;
+                color: var(--gray-900) !important;
+            }
+            .dosage-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+            .dosage-modal {
+                background: white;
+                padding: 2rem;
+                border-radius: 8px;
+                width: 400px;
+                max-width: 90%;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            .modal-header {
+                margin-bottom: 20px;
+            }
+            .modal-header h3 {
+                margin: 0;
+                color: var(--medical-primary);
+            }
+            .modal-header p {
+                margin: 10px 0 0;
+                color: var(--gray-600);
+                font-size: 14px;
+            }
+            .form-field {
+                margin-bottom: 15px;
+            }
+            .form-field label {
+                display: block;
+                margin-bottom: 5px;
+                color: var(--gray-700);
+            }
+            .form-field input, .form-field select {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid var(--gray-300);
+                border-radius: 4px;
+            }
+            .modal-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 20px;
+            }
+        </style>
+        <div class="dosage-modal-overlay">
+            <div class="dosage-modal">
+                <div class="modal-header">
+                    <h3>Enter Medication Details</h3>
+                    <p>${medication.serviceName || 'Selected Medication'}</p>
+                </div>
+                <div class="modal-content">
+                    <div class="form-field">
+                        <label>Dosage</label>
+                        <input type="text" id="dosageInput" placeholder="e.g., 500mg" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Quantity</label>
+                        <input type="number" id="quantityInput" min="1" value="1" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Unit</label>
+                        <select id="unitInput">
+                            <option value="tablets">Tablets</option>
+                            <option value="capsules">Capsules</option>
+                            <option value="ml">ML</option>
+                            <option value="mg">MG</option>
+                            <option value="units">Units</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn btn-primary" id="confirmBtn">Submit</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // First add the modal to the document
+    document.body.appendChild(modal);
+
+    // Now get references to the elements after they're in the DOM
+    const confirmBtn = modal.querySelector('#confirmBtn');
+    const cancelBtn = modal.querySelector('#cancelBtn');
+    const dosageInput = modal.querySelector('#dosageInput');
+    const quantityInput = modal.querySelector('#quantityInput');
+    const unitInput = modal.querySelector('#unitInput');
+
+    const closeModal = () => {
+        if (modal && modal.parentNode) {
+            modal.parentNode.removeChild(modal);
         }
-    } catch (error) {
-        console.error('Error in medication search:', error);
-        this.showNotification(`Error searching medications: ${error.message}`, 'error');
-        resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching medications:</p><p>' + error.message + '</p></div>';
-    } finally {
-        this.isLoading = false;
-        this.requestUpdate();
-    }
-  }
+    };
 
-  selectMedication(medication) {
-    console.log('Selecting medication:', medication);
-    
-    // Check for duplicates
-    if (this.medications.some(m => m.id === medication.id)) {
-        console.log('Duplicate medication found');
-        this.showNotification('This medication has already been added', 'warning');
-        return;
-    }
+    confirmBtn.addEventListener('click', () => {
+        const dosage = dosageInput.value.trim();
+        const quantity = parseInt(quantityInput.value);
+        const unit = unitInput.value;
 
-    // Initialize medications array if it doesn't exist
-    if (!Array.isArray(this.medications)) {
-        console.log('Initializing medications array');
-        this.medications = [];
-    }
+        if (!dosage || !quantity) {
+            this.showNotification('Please fill in all required fields', 'error');
+            return;
+        }
 
-    this.medications = [...this.medications, medication];
-    console.log('Updated medications list:', this.medications);
-    
-    this.updateProgress();
+        const medicationData = {
+            ...medication,
+            dosage,
+            quantity,
+            unit,
+            amount: (medication.standardCharges || 0) * quantity
+        };
+
+        console.log('Adding medication with data:', medicationData);
+        this.selectMedication(medicationData);
+        closeModal();
+    });
+
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Close modal on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal.querySelector('.dosage-modal-overlay')) {
+            closeModal();
+        }
+    });
+
+    // Focus on dosage input
+    dosageInput.focus();
+}
+
+selectMedication(medication) {
+    const newMedication = {
+        id: medication.id,
+        code: medication.serviceCode,
+        name: medication.serviceName,
+        description: medication.description || '',
+        type: medication.serviceTypeName,
+        dosage: medication.dosage,
+        quantity: medication.quantity,
+        unit: medication.unit,
+        amount: medication.standardCharges || 0
+    };
+
+    this.medications = [...this.medications, newMedication];
     this.requestUpdate();
     this.showNotification('Medication added successfully', 'success');
-  }
-
-  removeMedication(medication) {
-    this.medications = this.medications.filter(m => m.id !== medication.id);
-    this.updateProgress();
-    this.requestUpdate();
   }
 
   renderClaims() {
@@ -2430,13 +2716,31 @@ export class PriorAuthClaimManagement extends LitElement {
       
       const result = await response.json();
       if (result.isSuccessfull && result.dynamicResult) {
-        this.visits = result.dynamicResult;
+        // Map visit management visits
+        if (result.dynamicResult[0]?.visitmanagementVisits) {
+          this.visits = result.dynamicResult[0].visitmanagementVisits;
+        } else {
+          this.visits = result.dynamicResult;
+        }
+
         if (this.visits.length > 0) {
           this.selectVisit(this.visits[0]);
+          
+          // Update payload with visit information
+          this.payloadObject.visit = {
+            id: this.visits[0].id,
+            startDate: this.visits[0].startDate,
+            endDate: this.visits[0].endDate,
+            type: this.visits[0].type,
+            status: this.visits[0].status,
+            facility: this.visits[0].facilityId,
+            provider: this.visits[0].providerId
+          };
         }
       }
     } catch (error) {
       console.error('Error fetching visits:', error);
+      this.showNotification('Error loading visit data', 'error');
     } finally {
       this.isLoading = false;
     }
@@ -2514,17 +2818,17 @@ export class PriorAuthClaimManagement extends LitElement {
 
     // Set procedures from billing details/services if available
     if (visit.services && Array.isArray(visit.services)) {
-      this.procedures = visit.services.map(service => ({
-        id: service.id,
-        code: service.cptCode,
-        name: service.serviceName,
+    this.procedures = visit.services.map(service => ({
+      id: service.id,
+      code: service.cptCode,
+      name: service.serviceName,
         description: service.description || 'No description available',
         type: service.serviceTypeName || 'Service',
         charges: service.charges || 0,
-        provider: service.provider,
-        date: service.date,
-        status: service.status
-      }));
+      provider: service.provider,
+      date: service.date,
+      status: service.status
+    }));
     } else {
       this.procedures = [];
     }
@@ -2626,7 +2930,7 @@ export class PriorAuthClaimManagement extends LitElement {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const result = await response.json();
+      const result = await response.json();
         console.log('Diagnosis search result:', result);
 
         if (result.isSuccessfull && result.dynamicResult) {
@@ -2673,16 +2977,16 @@ export class PriorAuthClaimManagement extends LitElement {
             }
         } else {
             throw new Error(result.errorMessage || 'Failed to fetch diagnoses');
-        }
+      }
     } catch (error) {
         console.error('Error in diagnosis search:', error);
         this.showNotification(`Error searching diagnoses: ${error.message}`, 'error');
         resultsContainer.innerHTML = '<div class="dropdown-empty error"><p>Error searching diagnoses:</p><p>' + error.message + '</p></div>';
     } finally {
-        this.isLoading = false;
+      this.isLoading = false;
         this.requestUpdate();
     }
-}
+  }
 
   handleFileUpload(event) {
     const files = event.target.files;
@@ -2713,7 +3017,7 @@ export class PriorAuthClaimManagement extends LitElement {
       console.error('Error saving draft:', error);
       this.showNotification('Error saving draft', 'error');
     } finally {
-        this.isLoading = false;
+      this.isLoading = false;
     }
   }
 
@@ -2742,8 +3046,17 @@ export class PriorAuthClaimManagement extends LitElement {
   }
 
   async handleSubmit() {
-    this.loadingStates = { ...this.loadingStates, modal: true };
+    if (this.isSubmitting) return;
+    
+    this.isSubmitting = true;
+    this.submitStatus = 'submitting';
+    this.submitMessage = 'Submitting prior authorization request...';
+    
     try {
+      if (!this.selectedPatient) {
+        throw new Error('Please select a patient first');
+      }
+
       // Get the dental prior auth template
       const response = await fetch('/src/data/dp.json');
       const dentalPriorAuth = await response.json();
@@ -2771,16 +3084,24 @@ export class PriorAuthClaimManagement extends LitElement {
 
       const result = await submitResponse.json();
       if (result.isSuccessfull) {
+        this.submitStatus = 'success';
+        this.submitMessage = 'Prior authorization submitted successfully!';
         this.showNotification('Prior authorization submitted successfully', 'success');
+        
+        // Wait for 1.5 seconds to show success message before closing
+        await new Promise(resolve => setTimeout(resolve, 1500));
         this.handleClose();
       } else {
-        this.showNotification(result.errorMessage || 'Submission failed', 'error');
+        throw new Error(result.errorMessage || 'Submission failed');
       }
     } catch (error) {
       console.error('Error submitting prior auth:', error);
-      this.showNotification('Error submitting prior authorization', 'error');
+      this.submitStatus = 'error';
+      this.submitMessage = `Error: ${error.message}`;
+      this.showNotification('Error submitting prior authorization: ' + error.message, 'error');
     } finally {
-      this.loadingStates = { ...this.loadingStates, modal: false };
+      this.isSubmitting = false;
+      this.requestUpdate();
     }
   }
 
@@ -2798,30 +3119,11 @@ export class PriorAuthClaimManagement extends LitElement {
 
   async switchTab(tab) {
     if (tab === this.activeTab) return;
-
-    // Validate required data before switching to claims
-    if (tab === 'claims' && (!this.selectedPatient || !this.selectedVisit)) {
-      this.showNotification('Please select a patient and visit first', 'warning');
-      return;
-    }
-
     this.activeTab = tab;
     
-    switch (tab) {
-      case 'prior-auth':
-        await this.fetchVisits();
-        break;
-      case 'claims':
-        // Reset any existing claim data
-        if (this.claimComponent) {
-          this.claimComponent.resetForm();
-        }
-        break;
-      case 'reports':
-        // Handle reports tab initialization if needed
-        break;
+    if (tab === 'prior-auth') {
+      await this.fetchVisits();
     }
-
     this.requestUpdate();
   }
 
@@ -2879,32 +3181,65 @@ export class PriorAuthClaimManagement extends LitElement {
 
   updateProgress() {
     let completedSteps = 0;
-    let totalSteps = 7; // Updated total number of sections
+    let totalSteps = 7; // Total number of sections
 
-    // Check patient selection
-    if (this.selectedPatient) completedSteps++;
+    // Check patient selection and mark section as complete
+    if (this.selectedPatient) {
+        completedSteps++;
+        this.collapsedSections.patient = true;
+    }
 
-    // Check visit selection
-    if (this.selectedVisit) completedSteps++;
+    // Check visit selection and mark section as complete
+    if (this.selectedVisit) {
+        completedSteps++;
+        this.collapsedSections.visit = true;
+    }
 
-    // Check care team
-    if (this.careTeam && this.careTeam.length > 0) completedSteps++;
+    // Check care team and mark section as complete
+    if (this.careTeam && this.careTeam.length > 0) {
+        completedSteps++;
+        this.collapsedSections['care-team'] = true;
+    }
 
-    // Check diagnosis
-    if (this.diagnoses && this.diagnoses.length > 0) completedSteps++;
+    // Check diagnosis and mark section as complete
+    if (this.diagnoses && this.diagnoses.length > 0) {
+        completedSteps++;
+        this.collapsedSections.diagnosis = true;
+    }
 
-    // Check procedures
-    if (this.procedures && this.procedures.length > 0) completedSteps++;
+    // Check procedures and mark section as complete
+    if (this.procedures && this.procedures.length > 0) {
+        completedSteps++;
+        this.collapsedSections.procedures = true;
+    }
 
-    // Check medications
-    if (this.medications && this.medications.length > 0) completedSteps++;
+    // Check medications and mark section as complete
+    if (this.medications && this.medications.length > 0) {
+        completedSteps++;
+        this.collapsedSections.medications = true;
+    }
 
-    // Check supporting info
-    const hasSupporting = Object.values(this.formData.vitalSigns).some(value => value) ||
-                         Object.values(this.formData.clinicalInfo).some(value => value);
-    if (hasSupporting) completedSteps++;
+    // Check supporting info and mark section as complete
+    const hasSupporting = 
+        (this.formData.vitalSigns.bloodPressure || 
+         this.formData.vitalSigns.height || 
+         this.formData.vitalSigns.weight) ||
+        (this.formData.clinicalInfo.treatmentPlan || 
+         this.formData.clinicalInfo.patientHistory || 
+         this.formData.clinicalInfo.chiefComplaint);
+    
+    if (hasSupporting) {
+        completedSteps++;
+        this.collapsedSections.supporting = true;
+    }
 
     this.progress = Math.round((completedSteps / totalSteps) * 100);
+    
+    // Update payload object when a section is completed
+    this.updatePayloadObject();
+    
+    // Request an update to reflect the changes
+    this.requestUpdate();
   }
 
   isCollapsed(section) {
@@ -3119,7 +3454,7 @@ export class PriorAuthClaimManagement extends LitElement {
       const result = await response.json();
       if (result.isSuccessfull && result.dynamicResult) {
         this.servicePrices = result.dynamicResult;
-        this.requestUpdate();
+    this.requestUpdate();
       } else {
         throw new Error(result.errorMessage || 'Failed to fetch service prices');
       }
@@ -3185,7 +3520,7 @@ export class PriorAuthClaimManagement extends LitElement {
           body: JSON.stringify({
             page: 1,
             pageSize: 10,
-            filters: 'visitId==' + visitId
+            filters: 'NurseVisitId==' + visitId
           })
         });
 
@@ -3233,8 +3568,54 @@ export class PriorAuthClaimManagement extends LitElement {
     // Implement your notification system here
     console.log(`${type}: ${message}`);
   }
+
+  renderDiagnosisTable() {
+    if (!this.diagnoses?.length) {
+      return html`
+        <div class="empty-state">
+          <p>No diagnoses added yet</p>
+          <p class="text-sm text-gray-500">Search and select ICD-10 codes above</p>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ICD Code</th>
+              <th>Short Description</th>
+              <th>Description</th>
+              <th>Auth Required</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.diagnoses.map(diagnosis => html`
+              <tr>
+                <td>${diagnosis.code}</td>
+                <td>${diagnosis.shortDescription}</td>
+                <td>${diagnosis.description}</td>
+                <td>
+                  <span class="status-badge ${diagnosis.preAuthReq ? 'status-in-progress' : 'status-completed'}">
+                    ${diagnosis.preAuthReq ? 'Required' : 'Not Required'}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-secondary" @click="${() => this.removeDiagnosis(diagnosis)}">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
 }
 
 if (!customElements.get('prior-auth-claim-management')) {
   customElements.define('prior-auth-claim-management', PriorAuthClaimManagement);
-}
+} 

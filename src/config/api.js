@@ -1,4 +1,4 @@
-const API_URL = 'http://80.238.230.182:8081';
+const API_URL = 'https://localhost:7006';
 
 export const API_ENDPOINTS = {
     // Insurance Company endpoints
