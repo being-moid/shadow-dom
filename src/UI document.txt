@@ -1,0 +1,198 @@
+1. Master Form Layout
+First, let me describe the overall layout:
+
+# PreAuthorization Request UI Documentation
++------------------------------------------+
+|  PreAuthorization Request Header          |
+|  [Basic Information Fields]               |
++------------------------------------------+
+|  Tab Control                             |
+|  +--------------------------------------+|
+|  | Medications | Care Team | Supporting ||
+|  | Diagnoses   | Items     | Insurance  ||
+|  +--------------------------------------+|
+|  [Detail Grid for Selected Tab]          |
++------------------------------------------+
+|  Summary & Totals                        |
++------------------------------------------+
+
+
++----------------------------------------------------------------+
+| Patient Information [Autocomplete Search Box]                      |
++----------------------------------------------------------------+
+ Visit or Episode Selection [Autocomplete Search Box] 
++----------------------------------------------------------------+
+| Insurance Information [Autocomplete Search Box]                          |
++----------------------------------------------------------------+
+| Search Coverage: [Autocomplete Search Box]                       |
++----------------------------------------------------------------+
+| Selected Insurance:                                             |
+|                                                                |
+| +------------------------------------------------------------+
+| | Seq | Coverage ID | Focal | PreAuth Ref | Status | Actions  |
+| |-----|------------|--------|--------------|---------|----------|
+| | 1   |    ...     |  [✓]   |     ...     |   ...   |   [×]   |
+| +------------------------------------------------------------+
++----------------------------------------------------------------+
+| Diagnoses [+ Add Diagnosis]                                      |
++----------------------------------------------------------------+
+| Search Diagnosis: [Autocomplete Search Box]                      |
++----------------------------------------------------------------+
+| Selected Diagnoses:                                             |
+|                                                                |
+| +------------------------------------------------------------+
+| | Seq | Code | Description | Type | Present On Admission | Actions |
+| |-----|------|-------------|------|---------------------|----------|
+| | 1   | ...  |     ...     | ...  |      [Checkbox]     |   [×]   |
+| +------------------------------------------------------------+
+Features:
+ICD-10 code autocomplete search
+Type dropdown
+Admission checkbox (only for Institutional)
+Sequence management
+Primary diagnosis flagging
+
++----------------------------------------------------------------+
+| Items [+ Add Item]                                              |
++----------------------------------------------------------------+
+| Search Service/Product: [Autocomplete Search Box]                |
++----------------------------------------------------------------+
+| Selected Items:                                                 |
+|                                                                |
+| +------------------------------------------------------------+
+| | Code | Description | Qty | Unit Price | Tax | Net | Actions |
+| |------|-------------|-----|------------|-----|-----|----------|
+| | [R1] |     ...     | ... |    ...     | ... | ... |   [×]   |
+| +------------------------------------------------------------+
+| | Total:                                            | 0.00     |
+| +------------------------------------------------------------+
+
+
++----------------------------------------------------------------+
+| Item Details [+ Add Detail]                                      |
++----------------------------------------------------------------+
+| | Code | Description | Qty | Unit Price | Tax | Net | Actions   |
+| |------|-------------|-----|------------|-----|-----|-----------|
+| | [R1] |     ...     | ... |    ...     | ... | ... |   [×]    |
++----------------------------------------------------------------+
+
+Features:
+Service/product code autocomplete
+Automatic price population
+Quantity validation
+Tax calculation
+Net amount calculation
+Running total
+Nested details grid support
+
+
+
+2. Detail Grids Specifications
+2.1 Medication Requests Grid
+
+
++----------------------------------------------------------------+
+| Medication Requests [+ Add New]                                  |
++----------------------------------------------------------------+
+| Search Medication: [Autocomplete Search Box]                     |
++----------------------------------------------------------------+
+| Selected Medications:                                           |
+|                                                                |
+| +------------------------------------------------------------+
+| | Med Code | Name | Status | Intent | Dosage | Route | Actions|
+| |----------|------|---------|---------|---------|-------|--------|
+| | [Row 1]  | ...  |   ...   |   ...   |   ...   |  ...  |  [×]  |
+| | [Row 2]  | ...  |   ...   |   ...   |   ...   |  ...  |  [×]  |
+| +------------------------------------------------------------+
+Features:
+Autocomplete search that queries medication database
+Status dropdown (active, on-hold, cancelled, completed)
+Intent dropdown (proposal, plan, order, original-order)
+Nested grid for dosages
+Quick-add dosage button per row
+Inline editing capabilities
+Validation rules display
+Dosage Sub-Grid (expands under each medication):
++----------------------------------------------------------------+
+| Dosage Details [+ Add Dosage]                                    |
++----------------------------------------------------------------+
+| Sequence | Route | Timing | Frequency | Period | Dose | Actions  |
+|----------|--------|---------|------------|---------|------|---------|
+| [Row 1]  |  ...   |   ...   |    ...    |   ...   |  ... |   [×]   |
++----------------------------------------------------------------+
+
++----------------------------------------------------------------+
+| Care Team Members [+ Add Member]                                 |
++----------------------------------------------------------------+
+| Search Provider: [Autocomplete Search Box]                       |
++----------------------------------------------------------------+
+| Selected Team Members:                                          |
+|                                                                |
+| +------------------------------------------------------------+
+| | Seq | Provider Name | Role | Qualification | Specialty | Actions |
+| |-----|--------------|------|---------------|-----------|----------|
+| | 1   | [Row 1]      | ...  |     ...      |    ...    |   [×]   |
+| | 2   | [Row 2]      | ...  |     ...      |    ...    |   [×]   |
+| +------------------------------------------------------------+
+
++----------------------------------------------------------------+
+| Supporting Information [+ Add Information]                       |
++----------------------------------------------------------------+
+| Category: [Dropdown] Code: [Autocomplete Search]                 |
++----------------------------------------------------------------+
+| Selected Information:                                           |
+|                                                                |
+| +------------------------------------------------------------+
+| | Category | Code | Timing | Value | Reason | Documents | Actions |
+| |----------|------|---------|--------|---------|------------|--------|
+| | [Row 1]  | ...  |   ...   |  ...   |   ...   |    [📎]   |  [×]   |
+| +------------------------------------------------------------+
+Features:
+Category-based code filtering
+Date range picker for timing
+File attachment support
+Rich text editor for values
+Category-specific validation rules
+
+. Common Features Across All Grids
+Toolbar Features:
++----------------------------------------------------------------+
+| [Add] [Delete] [Refresh] [Export] [Import]                       |
++----------------------------------------------------------------+
+Search/Filter Panel:
++----------------------------------------------------------------+
+| Quick Filter: [      ]  Advanced Search [⌄]                      |
++----------------------------------------------------------------+
+Inline Editing:
+Double-click to edit
+Tab navigation
+Validation feedback
+Undo/redo support
+Context Menus:
++----------------+
+| Edit           |
+| Delete         |
+| Duplicate      |
+| View History   |
+| Export         |
++----------------+
+Keyboard Shortcuts:
+Ctrl+N: New record
+Ctrl+E: Edit
+Delete: Remove
+Ctrl+C/V: Copy/Paste
+F2: Quick edit
+Validation Features:
+Real-time validation
+Error indicators
+Tooltip explanations
+Required field highlighting
+Grid Features:
+Column resizing
+Column reordering
+Sort by any column
+Multi-select capability
+Grouping support
+Export to Excel/PDF
+Responsive design
+

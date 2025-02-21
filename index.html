@@ -1,4 +1,15 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prior Authorization Form Management</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"><style>:root {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prior Authorization Form Management</title>
+    
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    
+    <style>
+        :root {
             --primary: #8500d8;
             --primary-light: #a64ced;
             --primary-dark: #6a00ad;
@@ -69,11 +80,28 @@
             .page-description {
                 font-size: 1rem;
             }
-        }</style></head><body><div class="page-header"><h1 class="page-title">Prior Authorization Form</h1><p class="page-description">Complete the form below to submit a prior authorization request</p></div><div class="container"><prior-auth-form-widget></prior-auth-form-widget></div><script>// Event listeners for the form widget
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title">Prior Authorization Form</h1>
+        <p class="page-description">Complete the form below to submit a prior authorization request</p>
+    </div>
+
+    <div class="container">
+        <prior-auth-form-widget></prior-auth-form-widget>
+    </div>
+
+    <script>
+        // Event listeners for the form widget
         document.querySelector('prior-auth-form-widget').addEventListener('form-submit', (e) => {
             console.log('Form Submit:', e.detail);
         });
 
         document.querySelector('prior-auth-form-widget').addEventListener('form-save', (e) => {
             console.log('Form Save:', e.detail);
-        });</script><script defer="defer" src="/shadow-widgets.js"></script></body></html>
+        });
+    </script>
+</body>
+</html> 

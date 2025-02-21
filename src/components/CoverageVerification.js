@@ -1456,6 +1456,7 @@ export class CoverageVerification extends LitElement {
       selectedPlan: { type: Object },
       isLoading: { type: Boolean },
       isAutoMapping: { type: Boolean },
+      discovery: { type: Object },  
       autoMappingProgress: { type: Number },
       lastAutoMapResult: { type: String }
     };
@@ -1920,6 +1921,7 @@ export class CoverageVerification extends LitElement {
   constructor() {
     super();
     this.activeTab = 'coverage';
+
     this.isMappingLoader = false;
     this.selectedPatient = null;
     this.isVerifying = false;

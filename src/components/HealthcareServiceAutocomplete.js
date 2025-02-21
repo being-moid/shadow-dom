@@ -4,9 +4,20 @@ import { API_ENDPOINTS } from '../config/api.js';
 
 @customElement('healthcare-service-autocomplete')
 export class HealthcareServiceAutocomplete extends LitElement {
-  @property({ type: Array }) selectedServices = [];
-  @state() searchResults = [];
-  @state() isLoading = false;
+  static get properties() {
+    return {
+      selectedServices: { type: Array },
+      searchResults: { type: Array },
+      isLoading: { type: Boolean }
+    };
+  }
+
+  constructor() {
+    super();
+    this.selectedServices = [];
+    this.searchResults = [];
+    this.isLoading = false;
+  }
 
   static styles = css`
     :host {

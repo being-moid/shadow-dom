@@ -1,14 +1,6 @@
-import { LitElement, html, css, unsafeCSS } from 'lit';
-import './PatientSearch.js';
-import './PriorAuthActionButtons.js';
-import nphiesLogo from '../styles/nphies-logo-trans.png';
-import avatarImage from '../styles/avatar.png';
-import avatarBarcode from '../styles/avatar-barcode.png';
-import userIcon from '../styles/user.svg';
-import shieldIcon from '../styles/shield.svg';
-import { API_ENDPOINTS } from '../config/api.js';
-import './HealthcareServiceAutocomplete';
+import { LitElement, html, css } from 'lit';
 import './Claim.js';
+import { createFloatingButton } from '../utils/componentFactory.js';
 
 const componentStyles = css`
   :host {
@@ -1100,6 +1092,85 @@ const componentStyles = css`
     font-size: 1rem;
     line-height: 1.5;
   }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .error-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .error-item {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--error);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  .error-code, .error-display, .error-location {
+    margin-bottom: 0.5rem;
+  }
+
+  .no-errors {
+    color: var(--gray-500);
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .communication-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1rem;
+  }
+
+  .solicited, .unsolicited {
+    background: var(--gray-50);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  .communication-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .communication-item {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  .comm-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+  }
+
+  .comm-content {
+    color: var(--gray-800);
+  }
 `;
 
 export class PriorAuthClaimManagement extends LitElement {
@@ -1126,7 +1197,9 @@ export class PriorAuthClaimManagement extends LitElement {
       payloadObject: { type: Object },
       isSubmitting: { type: Boolean },
       submitStatus: { type: String }, // 'idle' | 'submitting' | 'success' | 'error'
-      submitMessage: { type: String }
+      submitMessage: { type: String },
+      errors: { type: Array },
+      communications: { type: Array },
     };
   }
 
@@ -1228,6 +1301,246 @@ export class PriorAuthClaimManagement extends LitElement {
           font-size: 1rem;
           line-height: 1.5;
         }
+
+        .spinner {
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .submit-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .error-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          padding: 1rem;
+        }
+
+        .error-item {
+          background: var(--gray-50);
+          border: 1px solid var(--gray-200);
+          border-left: 4px solid var(--error);
+          border-radius: 0.5rem;
+          padding: 1rem;
+        }
+
+        .error-code, .error-display, .error-location {
+          margin-bottom: 0.5rem;
+        }
+
+        .no-errors {
+          color: var(--gray-500);
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .communication-types {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 2rem;
+          padding: 1rem;
+        }
+
+        .solicited, .unsolicited {
+          background: var(--gray-50);
+          border-radius: 0.5rem;
+          padding: 1rem;
+        }
+
+        .communication-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+
+        .communication-item {
+          background: white;
+          border: 1px solid var(--gray-200);
+          border-radius: 0.5rem;
+          padding: 1rem;
+        }
+
+        .comm-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+          color: var(--gray-500);
+          font-size: 0.875rem;
+        }
+
+        .comm-content {
+          color: var(--gray-800);
+        }
+
+        /* Error Section Styles */
+        .error-count {
+          background: var(--error);
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          margin-left: 0.5rem;
+        }
+
+        .error-item {
+          background: white;
+          border-radius: 0.5rem;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          margin-bottom: 1rem;
+          overflow: hidden;
+          border: 1px solid var(--gray-200);
+        }
+
+        .error-item-header {
+          background: var(--gray-50);
+          padding: 0.75rem 1rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--gray-200);
+        }
+
+        .error-code-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--error);
+          font-weight: 500;
+        }
+
+        .error-icon, .message-icon, .location-icon {
+          width: 1.25rem;
+          height: 1.25rem;
+        }
+
+        .error-content {
+          padding: 1rem;
+        }
+
+        .error-message, .error-location {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+          color: var(--gray-700);
+        }
+
+        .error-timestamp {
+          color: var(--gray-500);
+          font-size: 0.875rem;
+        }
+
+        /* Communication Section Styles */
+        .communication-types {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 1.5rem;
+          padding: 1rem;
+        }
+
+        .communication-column {
+          background: var(--gray-50);
+          border-radius: 0.5rem;
+          padding: 1rem;
+        }
+
+        .column-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+          color: var(--primary);
+        }
+
+        .comm-type-icon {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+
+        .communication-item {
+          background: white;
+          border-radius: 0.5rem;
+          padding: 1rem;
+          margin-bottom: 1rem;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          border: 1px solid var(--gray-200);
+        }
+
+        .comm-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .comm-info {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .comm-status-icon {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .comm-date {
+          color: var(--gray-500);
+          font-size: 0.875rem;
+        }
+
+        .comm-status {
+          padding: 0.25rem 0.5rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+
+        .comm-status.pending {
+          background: var(--warning);
+          color: white;
+        }
+
+        .comm-status.completed {
+          background: var(--success);
+          color: white;
+        }
+
+        .comm-content {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          color: var(--gray-700);
+          font-size: 0.875rem;
+          line-height: 1.5;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 2rem;
+          color: var(--gray-500);
+        }
+
+        .empty-icon {
+          width: 3rem;
+          height: 3rem;
+          margin-bottom: 1rem;
+          color: var(--gray-400);
+        }
+
+        .empty-state p {
+          margin: 0;
+          font-size: 0.875rem;
+        }
       `
     ];
   }
@@ -1249,7 +1562,9 @@ export class PriorAuthClaimManagement extends LitElement {
       diagnosis: false,
       procedures: false,
       medications: false,
-      supporting: false
+      supporting: false,
+      errors: false,
+      communications: false
     };
     this.isLoading = false;
     this.formData = {
@@ -1274,6 +1589,8 @@ export class PriorAuthClaimManagement extends LitElement {
     this.isSubmitting = false;
     this.submitStatus = 'idle';
     this.submitMessage = '';
+    this.errors = [];
+    this.communications = [];
   }
 
   updatePayloadObject() {
@@ -1488,6 +1805,20 @@ export class PriorAuthClaimManagement extends LitElement {
 
   firstUpdated() {
     this.updateProgress();
+    
+    // Initialize coverage verification widget
+    this.coverageVerification = ShadowWidgets.createCoverageVerificationWithButton({
+      position: 'bottom-right-1',
+      glowing: true
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up the widget when component is destroyed
+    if (this.coverageVerification) {
+      this.coverageVerification.cleanup();
+    }
   }
 
   render() {
@@ -1538,7 +1869,7 @@ export class PriorAuthClaimManagement extends LitElement {
                 </h2>
               </div>
               <div class="section-content">
-                <patient-search 
+                <patient-search
                   @patient-selected="${async (event) => this.handlePatientSelect(event) }"
                   .selectedPatient="${this.selectedPatient}">
                 </patient-search>
@@ -1559,48 +1890,48 @@ export class PriorAuthClaimManagement extends LitElement {
                 ${this.selectedPatient ? html`
                   <div class="visit-table-container">
                     ${this.visits && this.visits.length > 0 ? html`
-                      <table class="visit-table">
-                        <thead>
-                          <tr>
-                            <th>Visit ID</th>
+                    <table class="visit-table">
+                      <thead>
+                        <tr>
+                          <th>Visit ID</th>
                             <th>Visit Date</th>
                             <th>Visit Type</th>
-                            <th>Status</th>
+                          <th>Status</th>
                             <th>Episode ID</th>
                             <th>Transaction ID</th>
                             <th>Facility</th>
                             <th>Provider</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${this.visits.map(visit => html`
-                            <tr class="${this.selectedVisit?.id === visit.id ? 'selected' : ''}">
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${this.visits.map(visit => html`
+                          <tr class="${this.selectedVisit?.id === visit.id ? 'selected' : ''}">
                               <td>${visit.id || 'N/A'}</td>
                               <td>${visit.startDate ? new Date(visit.startDate).toLocaleDateString() : 'N/A'}</td>
                               <td>${visit.type || 'Regular Visit'}</td>
                               <td>
                                 <span class="status-badge ${this.getStatusClass(visit.status)}">
                                   ${visit.status || 'Scheduled'}
-                                </span>
-                              </td>
+                              </span>
+                            </td>
                               <td>${visit.episodeId || 'N/A'}</td>
                               <td>${visit.transactionIdno || 'N/A'}</td>
                               <td>${visit.facilityName || visit.fkFacilityId || 'N/A'}</td>
                               <td>${visit.doctorName || visit.doctorId || 'N/A'}</td>
-                              <td>
-                                <button 
-                                  class="btn-select"
-                                  ?disabled="${this.selectedVisit?.id === visit.id}"
-                                  @click="${() => this.handleVisitSelect({ detail: visit })}"
-                                >
-                                  ${this.selectedVisit?.id === visit.id ? 'Selected' : 'Select'}
-                                </button>
-                              </td>
-                            </tr>
-                          `)}
-                        </tbody>
-                      </table>
+                            <td>
+                              <button 
+                                class="btn-select"
+                                ?disabled="${this.selectedVisit?.id === visit.id}"
+                                @click="${() => this.handleVisitSelect({ detail: visit })}"
+                              >
+                                ${this.selectedVisit?.id === visit.id ? 'Selected' : 'Select'}
+                              </button>
+                            </td>
+                          </tr>
+                        `)}
+                      </tbody>
+                    </table>
                     ` : html`
                       <div class="empty-state">
                         <p>No visits found for this patient</p>
@@ -1670,7 +2001,7 @@ export class PriorAuthClaimManagement extends LitElement {
                   <input type="text" class="form-input" id="medicationSearch" 
                     placeholder="Search medications" @input="${this.handleMedicationSearch}">
                   <label class="form-label" for="medicationSearch">Search Medications</label>
-                </div>
+                  </div>
                 ${this.medications && this.medications.length > 0 ? html`
                   <div class="table-container">
                     <table>
@@ -1708,7 +2039,7 @@ export class PriorAuthClaimManagement extends LitElement {
                   <div class="empty-state">
                     <p>No medications added yet</p>
                     <p class="text-sm text-gray-500">Search and select medications above</p>
-                  </div>
+                </div>
                 `}
               </div>
             </div>
@@ -1728,26 +2059,18 @@ export class PriorAuthClaimManagement extends LitElement {
               </div>
             </div>
 
-            <!-- Procedures Section -->
-            <div class="section ${this.collapsedSections.procedures ? 'collapsed' : ''}">
-              <div class="section-header" @click="${() => this.toggleSection('procedures')}">
-                <h2 class="section-title">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  Procedures
-                </h2>
-              </div>
-              <div class="section-content">
-                <healthcare-service-autocomplete
-                  @service-selected="${this.handleProcedureUpdate}"
-                  .selectedServices="${this.procedures}">
-                </healthcare-service-autocomplete>
+           
+             
                 ${this.renderProcedureSection()}
-              </div>
+                ${this.renderCommunicationSection()}
+                ${this.renderErrorSection()}
             </div>
+             
           </div>
+            
         </div>
+
+          
 
         <!-- Action Buttons -->
         <prior-auth-action-buttons
@@ -1896,9 +2219,9 @@ export class PriorAuthClaimManagement extends LitElement {
       <div class="empty-state">
         <p>No vitals information available</p>
         <p>Please select a visit first</p>
-      </div>
+          </div>
     `;
-
+    
     return html`
       <div class="vitals-container">
         <div class="form-grid">
@@ -1908,33 +2231,33 @@ export class PriorAuthClaimManagement extends LitElement {
             <div class="vital-input-group">
               <div class="form-field">
                 <label class="form-label">Blood Pressure</label>
-                <div class="bp-input-group">
+                  <div class="bp-input-group">
                   <input type="text" class="form-input bp-input" 
                     .value="${this.formData.vitalSigns.bloodPressure}"
                     @input="${(e) => this.updateFormData('vitalSigns', 'bloodPressure', e.target.value)}">
-                  <span>mmHg</span>
-                </div>
+                    <span>mmHg</span>
+                  </div>
               </div>
               <div class="form-field">
                 <label class="form-label">Height</label>
-                <div class="vital-input-group">
+                  <div class="vital-input-group">
                   <input type="number" class="form-input" 
                     .value="${this.formData.vitalSigns.height}"
                     @input="${(e) => this.updateFormData('vitalSigns', 'height', e.target.value)}">
-                  <span>cm</span>
-                </div>
+                    <span>cm</span>
+                  </div>
               </div>
               <div class="form-field">
                 <label class="form-label">Weight</label>
-                <div class="vital-input-group">
+                  <div class="vital-input-group">
                   <input type="number" class="form-input" 
                     .value="${this.formData.vitalSigns.weight}"
                     @input="${(e) => this.updateFormData('vitalSigns', 'weight', e.target.value)}">
-                  <span>kg</span>
-                </div>
-              </div>
-            </div>
-          </div>
+                    <span>kg</span>
+                  </div>
+                  </div>
+                  </div>
+        </div>
 
           <!-- Clinical Information -->
           <div class="form-group">
@@ -1956,9 +2279,9 @@ export class PriorAuthClaimManagement extends LitElement {
               <textarea class="form-input" name="chiefComplaint" rows="4"
                 .value="${this.formData.clinicalInfo.chiefComplaint}"
                 @input="${this.handleClinicalInfoUpdate}"></textarea>
-            </div>
           </div>
         </div>
+      </div>
       </div>
     `;
   }
@@ -2343,15 +2666,15 @@ promptForDosage(medication) {
                 color: var(--gray-900) !important;
             }
             .dosage-modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
                 z-index: 9999;
             }
             .dosage-modal {
@@ -2720,7 +3043,7 @@ selectMedication(medication) {
         if (result.dynamicResult[0]?.visitmanagementVisits) {
           this.visits = result.dynamicResult[0].visitmanagementVisits;
         } else {
-          this.visits = result.dynamicResult;
+        this.visits = result.dynamicResult;
         }
 
         if (this.visits.length > 0) {
@@ -3049,9 +3372,8 @@ selectMedication(medication) {
     if (this.isSubmitting) return;
     
     this.isSubmitting = true;
-    this.submitStatus = 'submitting';
-    this.submitMessage = 'Submitting prior authorization request...';
-    
+    this.requestUpdate();
+
     try {
       if (!this.selectedPatient) {
         throw new Error('Please select a patient first');
@@ -3084,20 +3406,12 @@ selectMedication(medication) {
 
       const result = await submitResponse.json();
       if (result.isSuccessfull) {
-        this.submitStatus = 'success';
-        this.submitMessage = 'Prior authorization submitted successfully!';
-        this.showNotification('Prior authorization submitted successfully', 'success');
-        
-        // Wait for 1.5 seconds to show success message before closing
-        await new Promise(resolve => setTimeout(resolve, 1500));
         this.handleClose();
       } else {
         throw new Error(result.errorMessage || 'Submission failed');
       }
     } catch (error) {
       console.error('Error submitting prior auth:', error);
-      this.submitStatus = 'error';
-      this.submitMessage = `Error: ${error.message}`;
       this.showNotification('Error submitting prior authorization: ' + error.message, 'error');
     } finally {
       this.isSubmitting = false;
@@ -3119,10 +3433,10 @@ selectMedication(medication) {
 
   async switchTab(tab) {
     if (tab === this.activeTab) return;
-    this.activeTab = tab;
+      this.activeTab = tab;
     
     if (tab === 'prior-auth') {
-      await this.fetchVisits();
+        await this.fetchVisits();
     }
     this.requestUpdate();
   }
@@ -3150,7 +3464,9 @@ selectMedication(medication) {
       diagnosis: false,
       procedures: false,
       medications: false,
-      supporting: false
+      supporting: false,
+      errors: false,
+      communications: false
     };
     this.isLoading = false;
     this.formData = {
@@ -3611,6 +3927,158 @@ selectMedication(medication) {
             `)}
           </tbody>
         </table>
+      </div>
+    `;
+  }
+
+  renderErrorSection() {
+    return html`
+      <div class="section ${this.collapsedSections.errors ? 'collapsed' : ''}">
+        <div class="section-header" @click="${() => this.toggleSection('errors')}">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Adjudication Errors
+            <span class="error-count">${this.errors.length}</span>
+          </h2>
+        </div>
+        <div class="section-content">
+          ${this.errors.length > 0 ? html`
+            <div class="error-list">
+              ${this.errors.map(error => html`
+                <div class="error-item">
+                  <div class="error-item-header">
+                    <div class="error-code-badge">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                      ${error.code.coding[0].code}
+                    </div>
+                    <div class="error-timestamp">
+                      ${new Date().toLocaleString()}
+                    </div>
+                  </div>
+                  <div class="error-content">
+                    <div class="error-message">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="message-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                      </svg>
+                      ${error.code.coding[0].display}
+                    </div>
+                    <div class="error-location">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="location-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                      </svg>
+                      ${error.code.coding[0].extension[0].valueString}
+                    </div>
+                  </div>
+                </div>
+              `)}
+            </div>
+          ` : html`
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <p>No adjudication errors found</p>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  renderCommunicationSection() {
+    return html`
+      <div class="section ${this.collapsedSections.communications ? 'collapsed' : ''}">
+        <div class="section-header" @click="${() => this.toggleSection('communications')}">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            Communications
+          </h2>
+        </div>
+        <div class="section-content">
+          <div class="communication-types">
+            <div class="communication-column solicited">
+              <div class="column-header">
+                <svg xmlns="http://www.w3.org/2000/svg" class="comm-type-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                <h3>Solicited Communications</h3>
+              </div>
+              <div class="communication-list">
+                ${this.communications.filter(c => c.type === 'solicited').length ? 
+                  this.communications.filter(c => c.type === 'solicited').map(comm => html`
+                    <div class="communication-item">
+                      <div class="comm-header">
+                        <div class="comm-info">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="comm-status-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                          </svg>
+                          <span class="comm-date">${new Date(comm.date).toLocaleString()}</span>
+                        </div>
+                        <span class="comm-status ${comm.status.toLowerCase()}">${comm.status}</span>
+                      </div>
+                      <div class="comm-content">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="message-icon" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clip-rule="evenodd" />
+                        </svg>
+                        ${comm.message}
+                      </div>
+                    </div>
+                  `) : html`
+                    <div class="empty-state">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clip-rule="evenodd" />
+                      </svg>
+                      <p>No solicited communications</p>
+                    </div>
+                  `}
+              </div>
+            </div>
+            <div class="communication-column unsolicited">
+              <div class="column-header">
+                <svg xmlns="http://www.w3.org/2000/svg" class="comm-type-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd" />
+                </svg>
+                <h3>Unsolicited Communications</h3>
+              </div>
+              <div class="communication-list">
+                ${this.communications.filter(c => c.type === 'unsolicited').length ? 
+                  this.communications.filter(c => c.type === 'unsolicited').map(comm => html`
+                    <div class="communication-item">
+                      <div class="comm-header">
+                        <div class="comm-info">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="comm-status-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                          </svg>
+                          <span class="comm-date">${new Date(comm.date).toLocaleString()}</span>
+                        </div>
+                        <span class="comm-status ${comm.status.toLowerCase()}">${comm.status}</span>
+                      </div>
+                      <div class="comm-content">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="message-icon" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clip-rule="evenodd" />
+                        </svg>
+                        ${comm.message}
+                      </div>
+                    </div>
+                  `) : html`
+                    <div class="empty-state">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clip-rule="evenodd" />
+                      </svg>
+                      <p>No unsolicited communications</p>
+                    </div>
+                  `}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }

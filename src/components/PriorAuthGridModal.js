@@ -6,6 +6,18 @@ const componentStyles = css`
   :host {
     display: block;
     font-family: var(--sw-font-family, 'Inter', system-ui, -apple-system, sans-serif);
+    --primary: #8500d8;
+    --primary-dark: #6a00ad;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
   }
 
   .modal-backdrop {
@@ -51,7 +63,7 @@ const componentStyles = css`
   }
 
   .modal-header {
-    background: #8500d8;
+    background: var(--primary);
     color: white;
     padding: 1.5rem 2rem;
     display: flex;
@@ -107,17 +119,56 @@ const componentStyles = css`
     stroke-width: 2.5;
   }
 
+  .modal-tabs {
+    display: flex;
+    background: white;
+    padding: 0;
+    border-bottom: 1px solid var(--gray-200);
+    gap: 0.5rem;
+  }
+
+  .modal-tab {
+    padding: 1rem 2rem;
+    color: var(--gray-600);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .modal-tab:hover {
+    color: var(--primary);
+    background: var(--gray-50);
+  }
+
+  .modal-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--gray-50);
+  }
+
+  .modal-tab-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
   .modal-body {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem;
-    background: var(--sw-background-color, #f8fafc);
+    background: var(--gray-50);
   }
 
   .modal-footer {
     padding: 1rem 2rem;
     background: white;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid var(--gray-200);
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
@@ -138,14 +189,22 @@ const componentStyles = css`
 
   .button-secondary {
     background: white;
-    border: 1.5px solid #D1D5DB;
-    color: #374151;
+    border: 1.5px solid var(--gray-300);
+    color: var(--gray-700);
   }
 
   .button-secondary:hover {
-    border-color: #9CA3AF;
-    color: #111827;
+    border-color: var(--gray-400);
+    color: var(--gray-900);
     transform: translateY(-1px);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
   }
 
   @keyframes slideIn {
@@ -168,7 +227,9 @@ export class PriorAuthGridModal extends LitElement {
   static get properties() {
     return {
       isOpen: { type: Boolean },
-      title: { type: String }
+      title: { type: String },
+      activeTab: { type: String },
+      selectedAuth: { type: Object }
     };
   }
 
@@ -180,6 +241,8 @@ export class PriorAuthGridModal extends LitElement {
     super();
     this.isOpen = false;
     this.title = 'Prior Authorization List';
+    this.activeTab = 'list';
+    this.selectedAuth = null;
   }
 
   handleBackdropClick(e) {
@@ -198,27 +261,36 @@ export class PriorAuthGridModal extends LitElement {
     
     setTimeout(() => {
       this.isOpen = false;
+      this.activeTab = 'list';
+      this.selectedAuth = null;
       this.dispatchEvent(new CustomEvent('close'));
       document.body.style.overflow = '';
     }, 300);
   }
 
+  switchTab(tab, auth = null) {
+    this.activeTab = tab;
+    if (auth) {
+      this.selectedAuth = auth;
+    }
+  }
+
   updated(changedProperties) {
     if (changedProperties.has('isOpen') && this.isOpen) {
-      // Wait for elements to be rendered
       setTimeout(() => {
         const backdrop = this.shadowRoot.querySelector('.modal-backdrop');
         const content = this.shadowRoot.querySelector('.modal-content');
-        
-        // Force a reflow before adding the open class
         backdrop.offsetHeight;
         content.offsetHeight;
-        
         backdrop.classList.add('open');
         content.classList.add('open');
         document.body.style.overflow = 'hidden';
       }, 0);
     }
+  }
+
+  handleViewClaim(auth) {
+    this.switchTab('claim', auth);
   }
 
   render() {
@@ -239,8 +311,41 @@ export class PriorAuthGridModal extends LitElement {
             </button>
           </div>
           
+          <div class="modal-tabs">
+            <button 
+              class="modal-tab ${this.activeTab === 'list' ? 'active' : ''}"
+              @click="${() => this.switchTab('list')}">
+              <svg class="modal-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Prior Authorizations
+            </button>
+            ${this.selectedAuth ? html`
+              <button 
+                class="modal-tab ${this.activeTab === 'claim' ? 'active' : ''}"
+                @click="${() => this.switchTab('claim')}">
+                <svg class="modal-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M9 17h6m-6-4h6m-6-4h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Claim Details
+              </button>
+            ` : ''}
+          </div>
+          
           <div class="modal-body">
-            <prior-auth-grid></prior-auth-grid>
+            <div class="tab-content ${this.activeTab === 'list' ? 'active' : ''}">
+              <prior-auth-grid
+                @view-claim="${(e) => this.handleViewClaim(e.detail)}"
+              ></prior-auth-grid>
+            </div>
+            
+            ${this.selectedAuth ? html`
+              <div class="tab-content ${this.activeTab === 'claim' ? 'active' : ''}">
+                <prior-auth-grid
+                  .selectedClaimView="${this.selectedAuth}"
+                ></prior-auth-grid>
+              </div>
+            ` : ''}
           </div>
           
           <div class="modal-footer">

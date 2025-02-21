@@ -444,6 +444,85 @@ const componentStyles = css`
     color: var(--gray-600);
     line-height: 1.5;
   }
+
+  .invoice-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .submit-claim-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary, #8500d8);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .submit-claim-button:hover {
+    background: var(--primary-dark, #6a00ad);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .submit-claim-button:active {
+    transform: translateY(0);
+  }
+
+  .button-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2;
+  }
+
+  .notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .notification.success {
+    background: #10B981;
+    color: white;
+  }
+
+  .notification.error {
+    background: #EF4444;
+    color: white;
+  }
+
+  .notification.info {
+    background: #3B82F6;
+    color: white;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
 `;
 
 export class PriorAuthGrid extends LitElement {
@@ -451,7 +530,8 @@ export class PriorAuthGrid extends LitElement {
     return {
       priorAuths: { type: Array },
       loading: { type: Boolean },
-      activeClaimTab: { type: String }
+      activeClaimTab: { type: String },
+      selectedClaimView: { type: Object }
     };
   }
 
@@ -651,6 +731,7 @@ export class PriorAuthGrid extends LitElement {
     this.priorAuths = [];
     this.loading = true;
     this.activeClaimTab = 'invoice';
+    this.selectedClaimView = null;
   }
 
   async connectedCallback() {
@@ -673,7 +754,14 @@ export class PriorAuthGrid extends LitElement {
       if (!response.ok) throw new Error('Failed to fetch prior auths');
       const data = await response.json();
       if (data.dynamicResult) {
-        this.priorAuths = data.dynamicResult;
+        // Sort the prior auths by date in descending order (newest first)
+        this.priorAuths = data.dynamicResult.sort((a, b) => {
+          const requestA = JSON.parse(a.customEndpointRequest);
+          const requestB = JSON.parse(b.customEndpointRequest);
+          const dateA = new Date(requestA.CreatedDate || requestA.RequestDate || 0);
+          const dateB = new Date(requestB.CreatedDate || requestB.RequestDate || 0);
+          return dateB - dateA;
+        });
       }
     } catch (error) {
       console.error('Error fetching prior auths:', error);
@@ -842,6 +930,38 @@ export class PriorAuthGrid extends LitElement {
     }
   }
 
+  async handleClaimSubmit(request) {
+    try {
+      const response = await fetch(API_ENDPOINTS.PREAUTHORIZATION.DENTAL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit claim');
+      }
+
+      const result = await response.json();
+      this.showNotification('Claim submitted successfully', 'success');
+      return result;
+    } catch (error) {
+      console.error('Error submitting claim:', error);
+      this.showNotification('Failed to submit claim: ' + error.message, 'error');
+      throw error;
+    }
+  }
+
+  showNotification(message, type = 'info') {
+    this.dispatchEvent(new CustomEvent('notification', {
+      detail: { message, type },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   renderInvoice(request) {
     const procedures = request.Procedures || [];
     const totalAmount = procedures.reduce((sum, proc) => sum + proc.UnitPrice, 0);
@@ -862,10 +982,16 @@ export class PriorAuthGrid extends LitElement {
               <p class="invoice-number">Request ID: ${request.RequestId}</p>
             </div>
           </div>
-          <div class="invoice-status">
-            <span class="status-badge ${request.ClaimType}">
-              ${request.ClaimType} Claim
-            </span>
+          <div class="invoice-actions">
+            <button 
+              class="submit-claim-button" 
+              @click=${() => this.handleClaimSubmit(request)}
+            >
+              <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012 2h2a2 2 0 012-2" stroke-width="2"/>
+              </svg>
+              Submit for Claim
+            </button>
           </div>
         </div>
 
@@ -1161,6 +1287,20 @@ export class PriorAuthGrid extends LitElement {
   }
 
   render() {
+    // If we're in claim view mode, only show the claim details
+    if (this.selectedClaimView) {
+      const request = JSON.parse(this.selectedClaimView.customEndpointRequest);
+      return html`
+        <div class="claim-container">
+          ${this.renderClaimTabs(request)}
+          <div class="claim-content">
+            ${this.renderClaimContent(request)}
+          </div>
+        </div>
+      `;
+    }
+
+    // Otherwise show the grid view
     return html`
       <div class="grid-container">
         ${this.loading ? html`
@@ -1234,24 +1374,15 @@ export class PriorAuthGrid extends LitElement {
                       </div>
                     </td>
                     <td class="action-cell">
-                      <button class="action-button" @click=${() => this.viewDetails(auth)}>
-                        View
-                      </button>
+                    
                       <button class="action-button" @click=${() => this.viewClaim(auth)}>
-                        Claim
+                        Convert to Claim
                       </button>
                       <button class="action-button" @click=${() => this.resubmit(auth)}>
                         Resubmit
                       </button>
                     </td>
                   </tr>
-                  ${auth.showClaim ? html`
-                    <tr>
-                      <td colspan="7">
-                        ${this.renderClaimInvoice(auth)}
-                      </td>
-                    </tr>
-                  ` : ''}
                 `;
               })}
             </tbody>
@@ -1270,11 +1401,11 @@ export class PriorAuthGrid extends LitElement {
   }
 
   viewClaim(auth) {
-    this.priorAuths = this.priorAuths.map(a => ({
-      ...a,
-      showClaim: a === auth ? !a.showClaim : false
+    this.dispatchEvent(new CustomEvent('view-claim', {
+      detail: auth,
+      bubbles: true,
+      composed: true
     }));
-    this.requestUpdate();
   }
 
   resubmit(auth) {

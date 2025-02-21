@@ -13,46 +13,44 @@ const componentStyles = css`
   .search-container {
     position: relative;
     width: 100%;
-  
   }
 
   .search-input {
-    width: 67rem;
+    width: 100%;
     padding: 1.25rem 1rem 1.25rem 3rem;
-    border: 1px solid #E5E7EB;
-    border-radius: 0.5rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
     background: white;
     font-size: 1rem;
-    color: #1F2937;
+    color: var(--gray-900);
     background-image: url('${unsafeCSS(searchIcon)}');
     background-repeat: no-repeat;
     background-position: 1rem center;
     background-size: 1.25rem;
     transition: all 0.2s ease;
-    margin-bottom: 1rem;
   }
 
   .search-input:focus {
     outline: none;
-    border-color: #463AA1;
-    box-shadow: 0 0 0 3px rgba(70, 58, 161, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(133, 0, 216, 0.1);
   }
 
   .search-input::placeholder {
-    color: #9CA3AF;
+    color: var(--gray-400);
   }
 
   .dropdown {
-
+    position: absolute;
     top: calc(100% + 0.5rem);
     left: 0;
     right: 0;
     background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 100;
-    max-height: 16rem;
+    max-height: 400px;
     overflow-y: auto;
   }
 
@@ -60,80 +58,138 @@ const componentStyles = css`
     padding: 1.25rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 1rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .search-result:not(:last-child) {
-    border-bottom: 1px solid #F3F4F6;
-  }
-
-  .search-result:first-child {
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--gray-100);
   }
 
   .search-result:last-child {
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
+    border-bottom: none;
   }
 
   .search-result:hover {
-    background-color: #F9FAFB;
+    background-color: var(--gray-50);
   }
 
-  .result-info {
+  .patient-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    background: var(--gray-100);
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .result-title {
-    font-weight: 600;
-    color: #111827;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-  }
-
-  .result-subtitle {
-    font-size: 0.75rem;
-    color: #6B7280;
-  }
-
-  .result-id {
-    font-size: 0.875rem;
-    color: #6B7280;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 1.5rem;
     font-weight: 500;
   }
 
-  /* New loader and no-results styles */
+  .result-info {
+    flex: 1;
+  }
+
+  .result-title {
+    color: var(--gray-900);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .result-subtitle {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .meta-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--gray-400);
+  }
+
+  .result-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .badge-verified {
+    background-color: var(--success);
+    color: white;
+  }
+
+  .badge-pending {
+    background-color: var(--warning);
+    color: white;
+  }
+
+  .badge-error {
+    background-color: var(--error);
+    color: white;
+  }
+
   .loader-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
-    gap: 0.5rem;
+    padding: 2rem;
+    gap: 0.75rem;
   }
 
   .loader {
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid #F3F4F6;
-    border-top: 2px solid #463AA1;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--gray-200);
+    border-top: 2px solid var(--primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  .loader-text {
+    color: var(--gray-600);
+    font-size: 0.875rem;
   }
 
   .no-results {
-    padding: 0.75rem 1.25rem;
+    padding: 2rem;
     text-align: center;
-    color: #6B7280;
+    color: var(--gray-500);
+  }
+
+  .no-results-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .no-results-text {
     font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .no-results-subtext {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 `;
 
@@ -148,7 +204,108 @@ export class PatientSearch extends LitElement {
   }
 
   static get styles() {
-    return componentStyles;
+    return [
+      componentStyles,
+      css`
+        .result-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+        }
+
+        .result-details {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--gray-600);
+          font-size: 0.875rem;
+        }
+
+        .detail-icon {
+          font-size: 1rem;
+        }
+
+        .detail-label {
+          font-weight: 500;
+          color: var(--gray-700);
+        }
+
+        .detail-value {
+          color: var(--gray-900);
+        }
+
+        .result-status {
+          margin-top: 0.5rem;
+        }
+
+        .status-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+
+        .status-insured {
+          background-color: var(--success);
+          color: white;
+        }
+
+        .status-self-pay {
+          background-color: var(--error);
+          color: white;
+        }
+
+        .status-icon {
+          font-size: 1rem;
+        }
+
+        .badge {
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          background-color: var(--primary-light);
+          color: white;
+        }
+
+        .badge-verified {
+          background-color: var(--success);
+        }
+
+        .no-results {
+          text-align: center;
+          padding: 2rem;
+        }
+
+        .no-results-icon {
+          font-size: 2rem;
+          margin-bottom: 0.5rem;
+          color: var(--gray-400);
+        }
+
+        .no-results-text {
+          color: var(--gray-700);
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+        }
+
+        .no-results-hint {
+          color: var(--gray-500);
+          font-size: 0.875rem;
+        }
+      `
+    ];
   }
 
   constructor() {
@@ -156,6 +313,94 @@ export class PatientSearch extends LitElement {
     this.searchQuery = '';
     this.suggestions = [];
     this.isLoading = false;
+  }
+
+  render() {
+    return html`
+      <div class="search-container">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by patient PIN, name or national ID..."
+          .value="${this.searchQuery}"
+          @input="${this.handleInputChange}"
+        >
+        ${this.searchQuery.length >= 3 ? html`
+          <div class="dropdown">
+            ${this.isLoading ? html`
+              <div class="loader-container">
+                <div class="loader"></div>
+                <span>Searching patients...</span>
+              </div>
+            ` : this.suggestions.length > 0 ? html`
+              ${this.suggestions.map(patient => html`
+                <div class="search-result" @click="${() => this.selectPatient(patient)}">
+                  <div class="result-info">
+                    <div class="result-header">
+                      <span class="result-title">${this.formatPatientName(patient)}</span>
+                      ${patient.patientInsurances?.length > 0 ? html`
+                        <span class="badge badge-verified">✓ Insured</span>
+                      ` : html`
+                        <span class="badge badge-warning">Self Pay</span>
+                      `}
+                    </div>
+                    <div class="result-details">
+                      <div class="detail-item">
+                        <span class="detail-icon">🏥</span>
+                        <span class="detail-label">MRN:</span>
+                        <span class="detail-value">${patient.pinNo}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-icon">🪪</span>
+                        <span class="detail-label">National ID:</span>
+                        <span class="detail-value">${patient.nic}</span>
+                      </div>
+                      ${patient.cellPhoneNo ? html`
+                        <div class="detail-item">
+                          <span class="detail-icon">📱</span>
+                          <span class="detail-label">Mobile:</span>
+                          <span class="detail-value">${patient.cellPhoneNo}</span>
+                        </div>
+                      ` : ''}
+                    </div>
+                    ${patient.patientInsurances?.length > 0 ? html`
+                      <div class="result-status">
+                        <span class="status-tag status-insured">
+                          <span class="status-icon">✓</span>
+                          Insured - ${patient.patientInsurances[0].payer?.companyName || 'N/A'}
+                        </span>
+                      </div>
+                    ` : html`
+                      <div class="result-status">
+                        <span class="status-tag status-self-pay">
+                          <span class="status-icon">⚠</span>
+                          Self Pay
+                        </span>
+                      </div>
+                    `}
+                  </div>
+                </div>
+              `)}
+            ` : html`
+              <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <div class="no-results-text">No matching patients found</div>
+                <div class="no-results-hint">Try searching with a different term</div>
+              </div>
+            `}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  getInitials(name) {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
 
   async handleInputChange(e) {
@@ -193,7 +438,6 @@ export class PatientSearch extends LitElement {
       }
     } else {
       this.suggestions = [];
-      this.isLoading = false;
     }
     this.requestUpdate();
   }
@@ -204,7 +448,6 @@ export class PatientSearch extends LitElement {
       ? fullPatientData.patientInsurances[0] 
       : null;
 
-    // Simple NPHIES verification - only check if insuranceCoverages exists and has items
     const isNphiesVerified = fullPatientData.insuranceCoverages && fullPatientData.insuranceCoverages.length > 0;
 
     const insuranceDetails = patientInsurance ? {
@@ -254,40 +497,12 @@ export class PatientSearch extends LitElement {
     this.suggestions = [];
   }
 
-  render() {
-    return html`
-      <div class="search-container">
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search by patient PIN..."
-          .value="${this.searchQuery}"
-          @input="${this.handleInputChange}"
-        >
-        ${this.searchQuery.length >= 3 ? html`
-          <div class="dropdown">
-            ${this.isLoading
-              ? html`
-                  <div class="loader-container">
-                    <div class="loader"></div>
-                    <span>Loading...</span>
-                  </div>
-                `
-              : this.suggestions.length
-                ? html`${this.suggestions.map(patient => html`
-                    <div class="search-result" @click="${() => this.selectPatient(patient)}">
-                      <div class="result-info">
-                        <span class="result-title">${patient.name}</span>
-                        <span class="result-subtitle">MRN: ${patient.mrn}</span>
-                      </div>
-                      <span class="result-id">ID: ${patient.nationalId}</span>
-                    </div>
-                  `)}
-                `
-                : html``}
-          </div>
-        ` : null}
-      </div>
-    `;
+  formatPatientName(patient) {
+    const nameParts = [
+      patient.firstName,
+      patient.middleName,
+      patient.lastName
+    ].filter(part => part && part.trim() !== '');
+    return nameParts.join(' ');
   }
 } 

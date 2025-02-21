@@ -69,11 +69,13 @@
             .page-description {
                 font-size: 1rem;
             }
-        }</style></head><body><div class="page-header"><h1 class="page-title">Prior Authorization Form</h1><p class="page-description">Complete the form below to submit a prior authorization request</p></div><div class="container"><prior-auth-form-widget></prior-auth-form-widget></div><script>// Event listeners for the form widget
+        }</style><script type="module" src="./src/shadow-widgets.js"></script></head><body><div class="page-header"><h1 class="page-title">Prior Authorization Form</h1><p class="page-description">Complete the form below to submit a prior authorization request</p></div><div class="container"><prior-auth-form-widget></prior-auth-form-widget></div><script>// Event listeners for the form widget
         document.querySelector('prior-auth-form-widget').addEventListener('form-submit', (e) => {
             console.log('Form Submit:', e.detail);
+            // Handle form submission
         });
 
         document.querySelector('prior-auth-form-widget').addEventListener('form-save', (e) => {
             console.log('Form Save:', e.detail);
-        });</script><script defer="defer" src="/shadow-widgets.js"></script></body></html>
+            // Handle form save
+        });</script><script defer="defer" src="/shadow-widgets.7c8c0905c6b32978bb51.js"></script></body></html>

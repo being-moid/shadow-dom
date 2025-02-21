@@ -1,7 +1,10 @@
-const API_URL = 'https://localhost:7006';
-
-export const API_ENDPOINTS = {
+// const API_URL = process.env.API_URL || 'https://80.238.230.182:8081';
+export const API_URL = `https://localhost:7006`;
+export const FHIR_URL = `https://bdb4-80-238-230-182.ngrok-free.app/$process-message`;
+const git="https://github.com/AhmedNassar147/exsys-web-naphies-server";
+export const API_ENDPOINTS = {  
     // Insurance Company endpoints
+    BASEURL: API_URL,
     INSURANCE_COMPANY: {
         BASE: `${API_URL}/api/insurancecompany`,
         PAGED: `${API_URL}/api/insurancecompany/getpagedasync`,
@@ -29,13 +32,16 @@ export const API_ENDPOINTS = {
     // Patient endpoints
     PATIENT: {
         PAGED: `${API_URL}/api/PatientPatientInformation/getpagedasync`,
-        SEARCH: `${API_URL}/api/PatientPatientInformation/Search`
+        SEARCH: `${API_URL}/api/PatientPatientInformation/Search`,
+        Eligblities :`${API_URL}/api/PatientCoverageEligiblityVerfication/getpagedasync`,
+        Family :`${API_URL}/api/PatientPatientinformation/family`
     },
     
     // Visit Management endpoints
     VISIT: {
         PAGED: `${API_URL}/api/Visitmanagementvisit/getpagedasync`,
-        DETAILS: `${API_URL}/api/Visitmanagementvisit/GetDetails`
+        DETAILS: `${API_URL}/api/Visitmanagementvisit/GetDetails`,
+        EPISODE_OF_CARE: `${API_URL}/api/VisitmanagementEpisode`
     },
     
     // Facility Management endpoints
