@@ -12,169 +12,61 @@ export class CareTeamSection extends LitElement {
                 display: block;
             }
 
-            .team-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 1.5rem;
+            .care-team-table {
+                width: 100%;
+                border-collapse: collapse;
                 margin-top: 1rem;
-            }
-
-            .member-card {
                 background: white;
-                border: 1px solid var(--gray-200);
-                border-radius: 12px;
-                padding: 1.25rem;
-                transition: all 0.2s ease;
-                position: relative;
-            }
-
-            .member-card:hover {
-                border-color: var(--primary-light);
-                box-shadow: 0 2px 4px rgba(133, 0, 216, 0.1);
-            }
-
-            .member-header {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                margin-bottom: 1rem;
-            }
-
-            .member-avatar {
-                width: 48px;
-                height: 48px;
-                border-radius: 24px;
-                background: var(--gray-100);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: var(--primary);
-                font-size: 1.5rem;
-                font-weight: 500;
-            }
-
-            .member-info {
-                flex: 1;
-            }
-
-            .member-name {
-                color: var(--gray-900);
-                font-weight: 500;
-                margin-bottom: 0.25rem;
-            }
-
-            .member-role {
-                color: var(--gray-600);
-                font-size: 0.875rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-
-            .role-icon {
-                width: 16px;
-                height: 16px;
-                color: var(--gray-400);
-            }
-
-            .member-meta {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 1rem;
-                margin-top: 1rem;
-                padding-top: 1rem;
-                border-top: 1px solid var(--gray-100);
-            }
-
-            .meta-item {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                color: var(--gray-600);
-                font-size: 0.875rem;
-            }
-
-            .meta-icon {
-                width: 16px;
-                height: 16px;
-                color: var(--gray-400);
-            }
-
-            .member-actions {
-                position: absolute;
-                top: 1rem;
-                right: 1rem;
-                display: flex;
-                gap: 0.5rem;
-            }
-
-            .action-button {
-                background: var(--gray-50);
-                border: none;
                 border-radius: 8px;
-                color: var(--gray-700);
-                cursor: pointer;
-                padding: 0.5rem;
-                transition: all 0.2s ease;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             }
 
-            .action-button:hover {
-                background: var(--gray-100);
-                color: var(--gray-900);
-            }
-
-            .action-icon {
-                width: 20px;
-                height: 20px;
-            }
-
-            .add-member {
-                border: 2px dashed var(--gray-200);
-                border-radius: 12px;
-                padding: 2rem;
-                text-align: center;
-                transition: all 0.2s ease;
+            .care-team-table th {
                 background: var(--gray-50);
-                cursor: pointer;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 1rem;
+                padding: 1rem;
+                text-align: left;
+                font-weight: 500;
+                color: var(--gray-700);
+                border-bottom: 1px solid var(--gray-200);
             }
 
-            .add-member:hover {
-                border-color: var(--primary);
-                background: white;
+            .care-team-table td {
+                padding: 1rem;
+                border-bottom: 1px solid var(--gray-100);
+                vertical-align: middle;
             }
 
-            .add-icon {
-                width: 48px;
-                height: 48px;
+            .care-team-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .care-team-table .form-control {
+                width: 100%;
+                min-width: 120px;
+            }
+
+            .care-team-table .actions-cell {
+                text-align: right;
+                white-space: nowrap;
+            }
+
+            .highlight {
+                font-family: monospace;
+                padding: 0.25rem 0.5rem;
+                background: var(--gray-50);
+                border-radius: 4px;
                 color: var(--primary);
             }
 
-            .add-text {
-                color: var(--gray-700);
-                font-size: 1rem;
-            }
-
-            .badge {
-                padding: 0.25rem 0.75rem;
-                border-radius: 9999px;
-                font-size: 0.75rem;
-                font-weight: 500;
-                text-transform: uppercase;
-            }
-
-            .badge-primary {
-                background-color: var(--primary-light);
-                color: white;
-            }
-
-            .badge-secondary {
-                background-color: var(--gray-100);
-                color: var(--gray-700);
+            .empty-state {
+                text-align: center;
+                padding: 2rem;
+                background: white;
+                border-radius: 8px;
+                border: 2px dashed var(--gray-200);
+                color: var(--gray-500);
+                margin-top: 1rem;
             }
         `
     ];
@@ -201,96 +93,102 @@ export class CareTeamSection extends LitElement {
             <div class="form-section">
                 <div class="search-section">
                     <div class="form-group">
-                        <label class="form-label">Search Practitioners</label>
+                        <label class="form-label">Search Care Team Member</label>
                         <div class="search-container">
                             <input 
                                 type="text" 
                                 class="form-control" 
-                                placeholder="Search by name, license number, or specialty..."
-                                @input=${this.handlePractitionerSearch}
-                                @focus=${() => this.showPractitionerResults = true}
+                                placeholder="Search by provider name or ID..."
+                                @input=${this.handleProviderSearch}
+                                @focus=${() => this.showProviderResults = true}
+                                @blur=${() => setTimeout(() => this.showProviderResults = false, 200)}
                             >
-                            ${this.isLoadingPractitioners ? html`<div class="loader"></div>` : ''}
-                            ${this.showPractitionerResults ? html`
-                                <div class="search-results">
-                                    ${this.isLoadingPractitioners ? html`
-                                        <div class="search-status">Searching...</div>
-                                    ` : this.practitionerSearchResults && this.practitionerSearchResults.length > 0 ? html`
-                                        ${this.practitionerSearchResults.map(practitioner => html`
-                                            <div class="search-result-item" @click=${() => this.selectPractitioner(practitioner)}>
-                                                <div class="patient-name">${practitioner.name}</div>
-                                                <div class="patient-info">
-                                                    <span class="highlight">License: ${practitioner.licenseNumber}</span> | 
-                                                    Specialty: ${practitioner.specialty}
-                                                </div>
-                                                <div class="search-info">
-                                                    ${practitioner.department || ''} ${practitioner.facility ? `| ${practitioner.facility}` : ''}
-                                                </div>
-                                            </div>
-                                        `)}
-                                    ` : html`
-                                        <div class="search-status">No practitioners found</div>
-                                    `}
-                                </div>
-                            ` : ''}
+                            ${this.renderSearchResults()}
                         </div>
                     </div>
                 </div>
 
-                <div class="care-team-list">
-                    ${this.careTeam.map(member => html`
-                        <div class="practitioner-card">
-                            <div class="practitioner-header">
-                                <h3 class="section-title">${member.name.text}</h3>
-                                <span class="role-badge">${this.getRoleDisplay(member.role.code)}</span>
+                ${this.renderCareTeamTable()}
+            </div>
+        `;
+    }
+
+    renderSearchResults() {
+        if (!this.showProviderResults) return '';
+
+        return html`
+            <div class="search-results">
+                ${this.isLoadingProviders ? html`
+                    <div class="search-status">Searching...</div>
+                ` : this.providerSearchResults?.length > 0 ? html`
+                    ${this.providerSearchResults.map(provider => html`
+                        <div class="search-result-item" @click=${() => this.selectProvider(provider)}>
+                            <div class="patient-name">${provider.name}</div>
+                            <div class="patient-info">
+                                <span class="highlight">ID: ${provider.id}</span> | 
+                                Specialty: ${provider.specialty || 'N/A'}
                             </div>
-                            <div class="practitioner-details">
-                                <div class="form-group">
-                                    <label class="form-label">Role</label>
-                                    <select class="form-control"
-                                            .value=${member.role.code}
-                                            @change=${(e) => this.updateMember(member, 'role.code', e.target.value)}>
-                                        <option value="primary">Primary</option>
-                                        <option value="secondary">Secondary</option>
-                                        <option value="consulting">Consulting</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Qualification</label>
-                                    <select class="form-control"
-                                            .value=${member.qualification.code}
-                                            @change=${(e) => this.updateMember(member, 'qualification.code', e.target.value)}>
-                                        ${this.getQualificationOptions().map(option => html`
-                                            <option value=${option.code}>${option.display}</option>
-                                        `)}
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">License Number</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           .value=${member.identifier.value}
-                                           readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Contact</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           .value=${member.contact.phone}
-                                           @change=${(e) => this.updateMember(member, 'contact.phone', e.target.value)}>
-                                </div>
-                                <div class="form-group">
-                                    <button class="button button-secondary" 
-                                            ?disabled=${member.role.code === 'primary' && this.careTeam.length > 1}
-                                            @click=${() => this.removeMember(member)}>
-                                        Remove
-                                    </button>
-                                </div>
+                            <div class="search-info">
+                                Facility: ${provider.facilityName || 'N/A'}
                             </div>
                         </div>
                     `)}
-                </div>
+                ` : html`
+                    <div class="search-status">No providers found</div>
+                `}
             </div>
+        `;
+    }
+
+    renderCareTeamTable() {
+        if (!Array.isArray(this.careTeam) || this.careTeam.length === 0) {
+            return html`
+                <div class="empty-state">
+                    <p>No care team members added yet. Use the search above to add providers.</p>
+                </div>
+            `;
+        }
+
+        return html`
+            <table class="care-team-table">
+                <thead>
+                    <tr>
+                        <th>Provider ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Specialty</th>
+                        <th>Facility</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${this.careTeam.map(provider => html`
+                        <tr>
+                            <td>
+                                <span class="highlight">${provider.id}</span>
+                            </td>
+                            <td>${provider.name}</td>
+                            <td>
+                                <select class="form-control" 
+                                        .value=${provider.role}
+                                        @change=${(e) => this.updateProvider(provider, 'role', e.target.value)}>
+                                    <option value="primary">Primary</option>
+                                    <option value="secondary">Secondary</option>
+                                    <option value="consulting">Consulting</option>
+                                </select>
+                            </td>
+                            <td>${provider.specialty || 'N/A'}</td>
+                            <td>${provider.facilityName || 'N/A'}</td>
+                            <td class="actions-cell">
+                                <button class="button button-secondary" 
+                                        @click=${() => this.removeProvider(provider)}>
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    `)}
+                </tbody>
+            </table>
         `;
     }
 

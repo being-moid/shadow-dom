@@ -2,7 +2,7 @@ import { LitElement, html, css, unsafeCSS } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import searchIcon from '../styles/search.svg';
 import { customElement } from 'lit/decorators.js';
-import API_ENDPOINTS from '@config/api.js';
+import {API_ENDPOINTS} from '../config/api.js';
 
 const componentStyles = css`
   :host {
@@ -408,14 +408,18 @@ export class PatientSearch extends LitElement {
     if (this.searchQuery.length >= 3) {
       this.isLoading = true;
       try {
+        const query = this.searchQuery.toString();
+        const filters = /^\d+$/.test(query) ? `pinNo_=${query}` : `(pinNo|firstName|middleName|lastName|nic|cellPhoneNo)_=${query}`;
+        const requestBody = JSON.stringify({
+          filters,
+          page: 1,
+          pageSize: 50
+        });
+
         const response = await fetch(API_ENDPOINTS.PATIENT.PAGED, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filters: `(pinNo|firstName|middleName|lastName|nic|cellPhoneNo)_=${this.searchQuery}`,
-            page: 1,
-            pageSize: 50
-          })
+          body: requestBody
         });
         const result = await response.json();
         if (result && result.dynamicResult) {

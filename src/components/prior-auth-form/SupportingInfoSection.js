@@ -465,7 +465,7 @@ export class SupportingInfoSection extends LitElement {
                 code: 'oxygen-saturation'
             },
             respiratoryRate: { 
-                icon: '��', 
+                icon: '↔️', 
                 label: 'Respiratory Rate',
                 unit: '/min',
                 code: 'respiratory-rate'
@@ -480,6 +480,94 @@ export class SupportingInfoSection extends LitElement {
                 label: 'Blood Sugar',
                 unit: 'mg/dL',
                 code: 'blood-sugar'
+            },
+            info: {
+                icon: 'ℹ️',
+                label: 'Information',
+                code: 'info'
+            },
+            patient_history: {
+                icon: '📜',
+                label: 'Patient History',
+                code: 'patient-history'
+            },
+            treatment_plan: {
+                icon: '🗒️',
+                label: 'Treatment Plan',
+                code: 'treatment-plan'
+            },
+            physical_examination: {
+                icon: '🩺',
+                label: 'Physical Exam',
+                code: 'physical-examination'
+            },
+            history_of_present_illness: {
+                icon: '📋',
+                label: 'History of Present Illness',
+                code: 'history-of-present-illness'
+            },
+            onset: {
+                icon: '⏰',
+                label: 'Onset',
+                code: 'onset'
+            },
+            attachment: {
+                icon: '📎',
+                label: 'Attachment',
+                code: 'attachment'
+            },
+            missingtooth: {
+                icon: '🦷',
+                label: 'Missing Tooth',
+                code: 'missingtooth'
+            },
+            hospitalized: {
+                icon: '🏥',
+                label: 'Hospitalized',
+                code: 'hospitalized'
+            },
+            employmentImpacted: {
+                icon: '💼',
+                label: 'Employment Impact',
+                code: 'employmentImpacted'
+            },
+            reason_for_visit: {
+                icon: '❓',
+                label: 'Reason for Visit',
+                code: 'reason-for-visit'
+            },
+            investigation_result: {
+                icon: '🔬',
+                label: 'Investigation Result',
+                code: 'investigation-result'
+            },
+            icu_hours: {
+                icon: '⏱️',
+                label: 'ICU Hours',
+                unit: 'hrs',
+                code: 'icu-hours'
+            },
+            days_supply: {
+                icon: '📅',
+                label: 'Days Supply',
+                unit: 'days',
+                code: 'days-supply'
+            },
+            ventilation_hours: {
+                icon: '💨',
+                label: 'Ventilation Hours',
+                unit: 'hrs',
+                code: 'ventilation-hours'
+            },
+            lab_test: {
+                icon: '🧪',
+                label: 'Lab Test',
+                code: 'lab-test'
+            },
+            morphology: {
+                icon: '🔍',
+                label: 'Morphology',
+                code: 'morphology'
             }
         };
     }

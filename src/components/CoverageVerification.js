@@ -117,7 +117,9 @@ const componentStyles = css`
     border-bottom-left-radius: 0.75rem;
     border-bottom-right-radius: 0.75rem;
     position: relative;
-    width: 100%;
+    width: 73rem;
+    min-height: 18rem;
+
     overflow-x: hidden;
   }
 
@@ -1928,21 +1930,7 @@ export class CoverageVerification extends LitElement {
     this.isVerified = false;
     this.isMappingComplete = false;
     this.serviceTypes = [
-      { id: 1, name: 'E & M Codes', mapped: [] },
-      { id: 2, name: 'CPT Services', mapped: [] },
-      { id: 3, name: 'Laboratory', mapped: [] },
-      { id: 4, name: 'Radiology', mapped: [] },
-      { id: 5, name: 'Dental', mapped: [] },
-      { id: 6, name: 'HCPCS', mapped: [] },
-      { id: 7, name: 'Room & Board', mapped: [] },
-      { id: 8, name: 'Pharmacy', mapped: [] },
-      { id: 9, name: 'HA Service Codes', mapped: [] },
-      { id: 10, name: 'DRG', mapped: [] },
-      { id: 11, name: 'Kitchen Services', mapped: [] },
-      { id: 12, name: 'Endoscopy', mapped: [] },
-      { id: 13, name: 'Orthodontic', mapped: [] },
-      { id: 14, name: 'Maternity', mapped: [] },
-      { id: 15, name: 'Surgical Packages', mapped: [] }
+      
     ];
     
     this.mappedBenefits = {};
@@ -1998,37 +1986,60 @@ export class CoverageVerification extends LitElement {
     // Load data
     this.loadFacilities();
     this.loadInsuranceCompanies();
-
+    this.loadServiceTypes();
     // Add event listener for switch-tab
     this.addEventListener('switch-tab', this.switchTab);
   }
-
-  async loadFacilities() {
+  async loadServiceTypes() {
     try {
-      const response = await fetch(API_ENDPOINTS.FACILITY.PAGED, {
+      const serviceTypeResponse = await fetch(API_ENDPOINTS.SERVICE_TYPE.PAGED, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filters: '',
+         
           page: 1,
-          pageSize: 10
+          pageSize: 100
         })
       });
-      const result = await response.json();
-      if (result.isSuccessfull) {
-        this.facilities = result.dynamicResult;
-        // Auto-select facility if patient has facilityId
-        if (this.selectedPatient && this.selectedPatient.facilityId) {
-          const autoFacility = this.facilities.find(f => f.id === this.selectedPatient.facilityId);
-          if (autoFacility) {
-            this.selectedFacility = autoFacility;
-          }
-        }
+      const serviceTypeResult = await serviceTypeResponse.json();
+      console.log('Service Types:', serviceTypeResult);
+      if (serviceTypeResult.isSuccessfull && serviceTypeResult.dynamicResult) {
+        this.serviceTypes = serviceTypeResult.dynamicResult.map(type => ({
+          id: type.id,
+          name: type.commonName,
+          mapped: []
+        })).sort((a,b)=>a.sequence-b.sequence);
       }
     } catch (error) {
-      console.error('Error loading facilities:', error);
+      console.error('Error fetching service types:', error);
     }
   }
+
+  async loadFacilities(){
+    const response = await fetch(API_ENDPOINTS.FACILITY.PAGED, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filters: '',
+        page: 1,
+        pageSize: 10
+      })
+    });
+    const result = await response.json();
+    if (result.isSuccessfull) {
+      this.facilities = result.dynamicResult;
+      // Auto-select facility if patient has facilityId
+      if (this.selectedPatient && this.selectedPatient.facilityId) {
+        const autoFacility = this.facilities.find(f => f.id === this.selectedPatient.facilityId);
+        if (autoFacility) {
+          this.selectedFacility = autoFacility;
+        }
+      
+    }
+  }
+}
+ 
+
 
   async loadInsuranceCompanies() {
     try {
@@ -2852,7 +2863,7 @@ export class CoverageVerification extends LitElement {
       const availableBenefits = this.getAvailableBenefitsForType(serviceType.id);
       availableBenefits.forEach(benefit => {
         if (getIntelligentMapping(benefit, serviceType.id) && 
-            !serviceType.mapped?.some(mapped => mapped.id === benefit.id)) {
+            !serviceType.mapped?.some(mapped => mapped.id || mapped.benefitId || mapped.code === (benefit.id || benefit.benefitId || benefit.code))) {
           unmappedRecommended = true;
         }
       });
@@ -2866,8 +2877,6 @@ export class CoverageVerification extends LitElement {
       }
     }
 
-   
-
     // Construct mapping payload object
     const mappingPayload = {
       patientId: this.selectedPatient?.id,  // Added patientId
@@ -2876,7 +2885,7 @@ export class CoverageVerification extends LitElement {
       insuranceCompanyId: this.selectedInsuranceCompany?.id,
       mapping: this.serviceTypes.map(serviceType => ({
         serviceTypeId: serviceType.id,
-        coverageBenefitIds: serviceType.mapped ? serviceType.mapped.map(b => b.id) : [],
+        coverageBenefitIds: serviceType.mapped ? serviceType.mapped.map(b => b.id || b.benefitId || b.code) : [],
         totalAmount: this.calculateTotalAllowed(serviceType.mapped || [])  // Sum of allowed amounts
       })).filter(item => item.coverageBenefitIds.length > 0)
     };
@@ -3316,17 +3325,25 @@ export class CoverageVerification extends LitElement {
     const identifier = nationalId || this.selectedPatient.passportNumber;
     const identifierSystem = nationalId ? "http://nphies.sa/identifier/iqama" : "http://nphies.sa/identifier/passport";
     
+    // Insert computed name logic before the return statement
+    const fullNameParts = (this.selectedPatient.name || '').split(' ').filter(part => part.trim() !== '');
+    const computedFirstName = (patientData.firstName && patientData.firstName.trim() !== '') ? patientData.firstName : (fullNameParts[0] || '');
+    const computedMiddleName = (patientData.middleName && patientData.middleName.trim() !== '') ? patientData.middleName : (fullNameParts.length > 2 ? fullNameParts.slice(1, fullNameParts.length - 1).join(' ') : '');
+    const computedFamilyName = (patientData.lastName && patientData.lastName.trim() !== '') ? patientData.lastName : (fullNameParts.length ? fullNameParts[fullNameParts.length - 1] : '');
+    let computedGivenNames = [computedFirstName, computedMiddleName].filter(name => name && name.trim() !== '');
+    if (computedGivenNames.length === 0 && computedFirstName.trim() !== '') {
+      computedGivenNames = [computedFirstName];
+    }
+
+    // Replace the old FamilyName and GivenNames lines in the returned PatientInfo object with the computed values
     return {
       PatientInfo: {
         Id: patientData.id,
         IqamaId: identifier,
         IdentifierSystem: identifierSystem,
         FullName: this.selectedPatient.name,
-        FamilyName: patientData.lastName || names[names.length - 1],
-        GivenNames: [
-          patientData.firstName || names[0],
-          patientData.middleName || (names.length > 2 ? names.slice(1, -1).join(' ') : '')
-        ].filter(Boolean),
+        FamilyName: computedFamilyName,
+        GivenNames: computedGivenNames,
         PhoneNumber: patientData.cellPhoneNo,
         Gender: patientData.gender?.genderName || 'Unknown',
         BirthDate: patientData.dateOfBirth,

@@ -11,6 +11,63 @@ export class MedicationSection extends LitElement {
             :host {
                 display: block;
             }
+
+            .medication-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 1rem;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .medication-table th {
+                background: var(--gray-50);
+                padding: 1rem;
+                text-align: left;
+                font-weight: 500;
+                color: var(--gray-700);
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            .medication-table td {
+                padding: 1rem;
+                border-bottom: 1px solid var(--gray-100);
+                vertical-align: middle;
+            }
+
+            .medication-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .medication-table .form-control {
+                width: 100%;
+                min-width: 120px;
+            }
+
+            .medication-table .actions-cell {
+                text-align: right;
+                white-space: nowrap;
+            }
+
+            .highlight {
+                font-family: monospace;
+                padding: 0.25rem 0.5rem;
+                background: var(--gray-50);
+                border-radius: 4px;
+                color: var(--primary);
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 2rem;
+                background: white;
+                border-radius: 8px;
+                border: 2px dashed var(--gray-200);
+                color: var(--gray-500);
+                margin-top: 1rem;
+            }
         `
     ];
 
@@ -44,93 +101,120 @@ export class MedicationSection extends LitElement {
                                 placeholder="Search by medication code or name..."
                                 @input=${this.handleMedicationSearch}
                                 @focus=${() => this.showMedicationResults = true}
+                                @blur=${() => setTimeout(() => this.showMedicationResults = false, 200)}
                             >
-                            ${this.isLoadingMedications ? html`<div class="loader"></div>` : ''}
-                            ${this.showMedicationResults ? html`
-                                <div class="search-results">
-                                    ${this.isLoadingMedications ? html`
-                                        <div class="search-status">Searching...</div>
-                                    ` : this.medicationSearchResults && this.medicationSearchResults.length > 0 ? html`
-                                        ${this.medicationSearchResults.map(med => html`
-                                            <div class="search-result-item" @click=${() => this.selectMedication(med)}>
-                                                <div class="patient-name">${med.description}</div>
-                                                <div class="patient-info">
-                                                    <span class="highlight">Code: ${med.serviceName}</span> | 
-                                                    Price: SAR ${med.standardCharges?.toFixed(2) || '0.00'}
-                                                </div>
-                                                <div class="search-info">
-                                                    Facility: ${med.facilityName || 'N/A'}
-                                                </div>
-                                            </div>
-                                        `)}
-                                    ` : html`
-                                        <div class="search-status">No medications found</div>
-                                    `}
-                                </div>
-                            ` : ''}
+                            ${this.renderSearchResults()}
                         </div>
                     </div>
                 </div>
 
-                <div class="grid-container">
-                    <div class="grid-header">
-                        <div>Med Code</div>
-                        <div>Name</div>
-                        <div>Status</div>
-                        <div>Intent</div>
-                        <div>Dosage</div>
-                        <div>Route</div>
-                        <div>Actions</div>
-                    </div>
-                    <div class="grid-body">
-                        ${this.medications.map(med => html`
-                            <div class="grid-row">
-                                <div>${med.code}</div>
-                                <div>${med.name}</div>
-                                <div>
-                                    <select class="form-control" 
-                                            .value=${med.status}
-                                            @change=${(e) => this.updateMedication(med, 'status', e.target.value)}>
-                                        <option value="active">Active</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="stopped">Stopped</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <select class="form-control"
-                                            .value=${med.intent}
-                                            @change=${(e) => this.updateMedication(med, 'intent', e.target.value)}>
-                                        <option value="proposal">Proposal</option>
-                                        <option value="plan">Plan</option>
-                                        <option value="order">Order</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input type="text" 
-                                           class="form-control"
-                                           .value=${med.dosage}
-                                           @change=${(e) => this.updateMedication(med, 'dosage', e.target.value)}
-                                           placeholder="Enter dosage"
-                                    >
-                                </div>
-                                <div>
-                                    <select class="form-control"
-                                            .value=${med.route}
-                                            @change=${(e) => this.updateMedication(med, 'route', e.target.value)}>
-                                        <option value="oral">Oral</option>
-                                        <option value="intravenous">Intravenous</option>
-                                        <option value="intramuscular">Intramuscular</option>
-                                        <option value="subcutaneous">Subcutaneous</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <button class="button button-secondary" @click=${() => this.removeMedication(med)}>Remove</button>
-                                </div>
-                            </div>
-                        `)}
-                    </div>
-                </div>
+                ${this.renderMedicationTable()}
             </div>
+        `;
+    }
+
+    renderSearchResults() {
+        if (!this.showMedicationResults) return '';
+
+        return html`
+            <div class="search-results">
+                ${this.isLoadingMedications ? html`
+                    <div class="search-status">Searching...</div>
+                ` : this.medicationSearchResults?.length > 0 ? html`
+                    ${this.medicationSearchResults.map(med => html`
+                        <div class="search-result-item" @click=${() => this.selectMedication(med)}>
+                            <div class="patient-name">${med.description}</div>
+                            <div class="patient-info">
+                                <span class="highlight">Code: ${med.serviceName}</span> | 
+                                Price: SAR ${med.standardCharges?.toFixed(2) || '0.00'}
+                            </div>
+                            <div class="search-info">
+                                Facility: ${med.facilityName || 'N/A'}
+                            </div>
+                        </div>
+                    `)}
+                ` : html`
+                    <div class="search-status">No medications found</div>
+                `}
+            </div>
+        `;
+    }
+
+    renderMedicationTable() {
+        if (!Array.isArray(this.medications) || this.medications.length === 0) {
+            return html`
+                <div class="empty-state">
+                    <p>No medications added yet. Use the search above to add medications.</p>
+                </div>
+            `;
+        }
+
+        return html`
+            <table class="medication-table">
+                <thead>
+                    <tr>
+                        <th>Med Code</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Intent</th>
+                        <th>Dosage</th>
+                        <th>Route</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${this.medications.map(med => html`
+                        <tr>
+                            <td>
+                                <span class="highlight">${med.code}</span>
+                            </td>
+                            <td>${med.name}</td>
+                            <td>
+                                <select class="form-control" 
+                                        .value=${med.status}
+                                        @change=${(e) => this.updateMedication(med, 'status', e.target.value)}>
+                                    <option value="active">Active</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="stopped">Stopped</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control"
+                                        .value=${med.intent}
+                                        @change=${(e) => this.updateMedication(med, 'intent', e.target.value)}>
+                                    <option value="proposal">Proposal</option>
+                                    <option value="plan">Plan</option>
+                                    <option value="order">Order</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       class="form-control"
+                                       .value=${med.dosage}
+                                       @change=${(e) => this.updateMedication(med, 'dosage', e.target.value)}
+                                       placeholder="Enter dosage"
+                                >
+                            </td>
+                            <td>
+                                <select class="form-control"
+                                        .value=${med.route}
+                                        @change=${(e) => this.updateMedication(med, 'route', e.target.value)}>
+                                    <option value="oral">Oral</option>
+                                    <option value="intravenous">Intravenous</option>
+                                    <option value="intramuscular">Intramuscular</option>
+                                    <option value="subcutaneous">Subcutaneous</option>
+                                </select>
+                            </td>
+                            <td class="actions-cell">
+                                <button class="button button-secondary" 
+                                        @click=${() => this.removeMedication(med)}>
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    `)}
+                </tbody>
+            </table>
         `;
     }
 

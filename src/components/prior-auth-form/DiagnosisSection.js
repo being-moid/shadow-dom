@@ -209,6 +209,86 @@ export class DiagnosisSection extends LitElement {
                 .result-description {
                     color: var(--gray-700);
                 }
+
+                .diagnosis-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 1rem;
+                    background: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                .diagnosis-table th {
+                    background: var(--gray-50);
+                    padding: 1rem;
+                    text-align: left;
+                    font-weight: 500;
+                    color: var(--gray-700);
+                    border-bottom: 1px solid var(--gray-200);
+                }
+
+                .diagnosis-table td {
+                    padding: 1rem;
+                    border-bottom: 1px solid var(--gray-100);
+                    vertical-align: middle;
+                }
+
+                .diagnosis-table tr:last-child td {
+                    border-bottom: none;
+                }
+
+                .diagnosis-table .form-control {
+                    width: 100%;
+                    min-width: 120px;
+                }
+
+                .diagnosis-table .checkbox-cell {
+                    text-align: center;
+                }
+
+                .diagnosis-table .actions-cell {
+                    text-align: right;
+                    white-space: nowrap;
+                }
+
+                .highlight {
+                    font-family: monospace;
+                    padding: 0.25rem 0.5rem;
+                    background: var(--gray-50);
+                    border-radius: 4px;
+                    color: var(--primary);
+                }
+
+                .badge {
+                    display: inline-block;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 9999px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    text-align: center;
+                }
+
+                .badge-warning {
+                    background-color: var(--warning-light);
+                    color: var(--warning-dark);
+                }
+
+                .badge-success {
+                    background-color: var(--success-light);
+                    color: var(--success-dark);
+                }
+
+                .empty-state {
+                    text-align: center;
+                    padding: 2rem;
+                    background: white;
+                    border-radius: 8px;
+                    border: 2px dashed var(--gray-200);
+                    color: var(--gray-500);
+                    margin-top: 1rem;
+                }
             `
         ];
     }
@@ -228,9 +308,17 @@ export class DiagnosisSection extends LitElement {
         this.diagnosisSearchResults = [];
         this.showDiagnosisResults = false;
         this.isLoadingDiagnosis = false;
+        this.addEventListener('diagnosis-selected', () => this.requestUpdate());
+    }
+
+    updated(changedProperties) {
+        if (changedProperties.has('diagnoses')) {
+            console.log('Diagnoses updated:', this.diagnoses);
+        }
     }
 
     render() {
+        console.log('Rendering DiagnosisSection, diagnoses:', this.diagnoses);
         return html`
             <div class="form-section">
                 <div class="search-section">
@@ -245,87 +333,110 @@ export class DiagnosisSection extends LitElement {
                                 @focus=${() => this.showDiagnosisResults = true}
                                 @blur=${() => setTimeout(() => this.showDiagnosisResults = false, 200)}
                             >
-                            ${this.isLoadingDiagnosis ? html`<div class="loader"></div>` : ''}
-                            ${this.showDiagnosisResults ? html`
-                                <div class="search-results">
-                                    ${this.isLoadingDiagnosis ? html`
-                                        <div class="search-status">Searching...</div>
-                                    ` : this.diagnosisSearchResults && this.diagnosisSearchResults.length > 0 ? html`
-                                        ${this.diagnosisSearchResults.map(diagnosis => html`
-                                            <div class="search-result-item" @click=${() => this.selectDiagnosis(diagnosis)}>
-                                                <div class="patient-name">${diagnosis.shortDescription}</div>
-                                                <div class="patient-info">
-                                                    <span class="highlight">ICD-${diagnosis.icdtype === 1 ? '9' : '10'}: ${diagnosis.code}</span>
-                                                    ${diagnosis.preAuthReq ? html`
-                                                        <span class="badge badge-warning">Prior Auth Required</span>
-                                                    ` : html`
-                                                        <span class="badge badge-success">No Auth Required</span>
-                                                    `}
-                                                </div>
-                                                <div class="search-info">
-                                                    ${diagnosis.description !== diagnosis.shortDescription ? diagnosis.description : ''}
-                                                </div>
-                                            </div>
-                                        `)}
-                                    ` : html`
-                                        <div class="search-status">No diagnoses found</div>
-                                    `}
-                                </div>
-                            ` : ''}
+                            ${this.renderSearchResults()}
                         </div>
                     </div>
                 </div>
 
-                <div class="grid-container">
-                    <div class="grid-header">
-                        <div>ICD Code</div>
-                        <div>Description</div>
-                        <div>Type</div>
-                        <div>Present On Admission</div>
-                        <div>Auth Required</div>
-                        <div>Actions</div>
-                    </div>
-                    <div class="grid-body">
-                        ${this.diagnoses.map(diagnosis => html`
-                            <div class="grid-row">
-                                <div>
-                                    <span class="highlight">ICD-${diagnosis.icdtype === 1 ? '9' : '10'}: ${diagnosis.code}</span>
-                                </div>
-                                <div>${diagnosis.description}</div>
-                                <div>
-                                    <select class="form-control"
-                                            .value=${diagnosis.type}
-                                            ?disabled=${diagnosis.type === 'principal' && this.diagnoses.length > 1}
-                                            @change=${(e) => this.updateDiagnosis(diagnosis, 'type', e.target.value)}>
-                                        <option value="principal">Principal</option>
-                                        <option value="secondary">Secondary</option>
-                                        <option value="admitting">Admitting</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input 
-                                        type="checkbox" 
-                                        ?checked=${diagnosis.presentOnAdmission}
-                                        @change=${(e) => this.updateDiagnosis(diagnosis, 'presentOnAdmission', e.target.checked)}
-                                    >
-                                </div>
-                                <div>
-                                    <span class="badge ${diagnosis.preAuthReq ? 'badge-warning' : 'badge-success'}">
-                                        ${diagnosis.preAuthReq ? 'Required' : 'Not Required'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <button class="button button-secondary" 
-                                            ?disabled=${diagnosis.type === 'principal' && this.diagnoses.length > 1}
-                                            @click=${() => this.removeDiagnosis(diagnosis)}>
-                                        Remove
-                                    </button>
-                                </div>
-                            </div>
-                        `)}
-                    </div>
-                </div>
+                ${this.renderDiagnosisGrid()}
             </div>
+        `;
+    }
+
+    renderSearchResults() {
+        if (!this.showDiagnosisResults) return '';
+
+        return html`
+            <div class="search-results">
+                ${this.isLoadingDiagnosis ? html`
+                    <div class="search-status">Searching...</div>
+                ` : this.diagnosisSearchResults?.length > 0 ? html`
+                    ${this.diagnosisSearchResults.map(diagnosis => html`
+                        <div class="search-result-item" @click=${() => this.selectDiagnosis(diagnosis)}>
+                            <div class="patient-name">${diagnosis.shortDescription}</div>
+                            <div class="patient-info">
+                                <span class="highlight">ICD-${diagnosis.icdtype === 1 ? '9' : '10'}: ${diagnosis.code}</span>
+                                ${diagnosis.preAuthReq ? html`
+                                    <span class="badge badge-warning">Prior Auth Required</span>
+                                ` : html`
+                                    <span class="badge badge-success">No Auth Required</span>
+                                `}
+                            </div>
+                            <div class="search-info">
+                                ${diagnosis.description !== diagnosis.shortDescription ? diagnosis.description : ''}
+                            </div>
+                        </div>
+                    `)}
+                ` : html`
+                    <div class="search-status">No diagnoses found</div>
+                `}
+            </div>
+        `;
+    }
+
+    renderDiagnosisGrid() {
+        console.log('Rendering diagnosis grid with:', this.diagnoses);
+        
+        if (!Array.isArray(this.diagnoses) || this.diagnoses.length === 0) {
+            return html`
+                <div class="empty-state">
+                    <p>No diagnoses added yet. Use the search above to add diagnoses.</p>
+                </div>
+            `;
+        }
+
+        return html`
+            <table class="diagnosis-table">
+                <thead>
+                    <tr>
+                        <th>ICD Code</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Present On Admission</th>
+                        <th>Auth Required</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${this.diagnoses.map(diagnosis => html`
+                        <tr>
+                            <td>
+                                <span class="highlight">ICD-${diagnosis.icdtype === 1 ? '9' : '10'}: ${diagnosis.code}</span>
+                            </td>
+                            <td>${diagnosis.description}</td>
+                            <td>
+                                <select class="form-control"
+                                        .value=${diagnosis.type || 'secondary'}
+                                        ?disabled=${diagnosis.type === 'principal' && this.diagnoses.length > 1}
+                                        @change=${(e) => this.updateDiagnosis(diagnosis, 'type', e.target.value)}>
+                                    <option value="principal">Principal</option>
+                                    <option value="secondary">Secondary</option>
+                                    <option value="admitting">Admitting</option>
+                                </select>
+                            </td>
+                            <td class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    ?checked=${diagnosis.presentOnAdmission}
+                                    @change=${(e) => this.updateDiagnosis(diagnosis, 'presentOnAdmission', e.target.checked)}
+                                >
+                            </td>
+                            <td>
+                                <span class="badge ${diagnosis.preAuthReq ? 'badge-warning' : 'badge-success'}">
+                                    ${diagnosis.preAuthReq ? 'Required' : 'Not Required'}
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <button class="button button-secondary" 
+                                        ?disabled=${diagnosis.type === 'principal' && this.diagnoses.length > 1}
+                                        @click=${() => this.removeDiagnosis(diagnosis)}>
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    `)}
+                </tbody>
+            </table>
         `;
     }
 
@@ -380,6 +491,8 @@ export class DiagnosisSection extends LitElement {
     }
 
     selectDiagnosis(diagnosis) {
+        console.log('Selecting diagnosis:', diagnosis);
+        
         // Prevent duplicate diagnoses
         const isDiagnosisExists = this.diagnoses.some(d => d.code === diagnosis.code);
         if (isDiagnosisExists) {
@@ -394,14 +507,19 @@ export class DiagnosisSection extends LitElement {
         const newDiagnosis = {
             id: diagnosis.id,
             code: diagnosis.code,
-            description: diagnosis.description,
+            description: diagnosis.shortDescription || diagnosis.description,
             shortDescription: diagnosis.shortDescription,
             type: this.diagnoses.length === 0 ? 'principal' : 'secondary',
-            presentOnAdmission: true,
+            presentOnAdmission: false,
             preAuthReq: diagnosis.preAuthReq,
-            icdtype: diagnosis.icdtype
+            icdtype: diagnosis.icdtype,
+            sequence: this.diagnoses.length + 1
         };
 
+        // Update local array first
+        this.diagnoses = [...this.diagnoses, newDiagnosis];
+        
+        // Then dispatch event
         this.dispatchEvent(new CustomEvent('diagnosis-selected', {
             detail: newDiagnosis,
             bubbles: true,
@@ -410,21 +528,40 @@ export class DiagnosisSection extends LitElement {
 
         this.showDiagnosisResults = false;
         this.diagnosisSearchResults = [];
+        
+        // Force update
+        this.requestUpdate();
     }
 
     updateDiagnosis(diagnosis, field, value) {
+        // Update local array first
+        this.diagnoses = this.diagnoses.map(d => 
+            d.id === diagnosis.id ? { ...d, [field]: value } : d
+        );
+        
+        // Then dispatch event
         this.dispatchEvent(new CustomEvent('diagnosis-updated', {
             detail: { diagnosis, field, value },
             bubbles: true,
             composed: true
         }));
+        
+        // Force update
+        this.requestUpdate();
     }
 
     removeDiagnosis(diagnosis) {
+        // Update local array first
+        this.diagnoses = this.diagnoses.filter(d => d.id !== diagnosis.id);
+        
+        // Then dispatch event
         this.dispatchEvent(new CustomEvent('diagnosis-removed', {
             detail: diagnosis,
             bubbles: true,
             composed: true
         }));
+        
+        // Force update
+        this.requestUpdate();
     }
 } 

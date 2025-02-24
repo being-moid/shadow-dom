@@ -1,6 +1,6 @@
 // const API_URL = process.env.API_URL || 'https://80.238.230.182:8081';
-export const API_URL = `https://localhost:7006`;
-export const FHIR_URL = `https://bdb4-80-238-230-182.ngrok-free.app/$process-message`;
+export const API_URL = `http://localhost:5263`;
+export const FHIR_URL = `https://4f8d-80-238-230-182.ngrok-free.app/$process-message`;
 const git="https://github.com/AhmedNassar147/exsys-web-naphies-server";
 export const API_ENDPOINTS = {  
     // Insurance Company endpoints
@@ -14,7 +14,11 @@ export const API_ENDPOINTS = {
     INSURANCE_PLAN:{
         BASE: `${API_URL}/api/InsurancePlan`,
         MapNPHIESCoverageBenefit: `${API_URL}/api/InsurancePlan/MapNPHIESCoverageBenefit`,
-        BULK_INSERT: `${API_URL}/api/InsuranceSlab/BulkInsert`
+        BULK_INSERT: `${API_URL}/api/InsuranceSlab/BulkInsert`,
+        
+    },
+    FHIR:{
+        SendMessage: `${API_URL}/api/fhir/send`
     },
     // Insurance Contract endpoints
 
@@ -33,8 +37,10 @@ export const API_ENDPOINTS = {
     PATIENT: {
         PAGED: `${API_URL}/api/PatientPatientInformation/getpagedasync`,
         SEARCH: `${API_URL}/api/PatientPatientInformation/Search`,
-        Eligblities :`${API_URL}/api/PatientCoverageEligiblityVerfication/getpagedasync`,
-        Family :`${API_URL}/api/PatientPatientinformation/family`
+        Eligblities :`${API_URL}/api/PatientCoverageEligiblityVerfication/patient`,
+        Family :`${API_URL}/api/PatientPatientinformation/family`,
+        LoadCoverage :`${API_URL}/api/InsuranceCoverage/patient/`,
+        
     },
     
     // Visit Management endpoints
@@ -59,7 +65,8 @@ export const API_ENDPOINTS = {
     // Prior Auth endpoints
     PRIOR_AUTH: {
         SUBMIT: `${API_URL}/api/PriorAuth/Submit`,
-        DENTAL_SUBMIT: `${API_URL}/api/priorauth/dental/submit`
+        DENTAL_SUBMIT: `${API_URL}/api/priorauth/dental/submit`,
+        PRE_AUTH_REQ:`${API_URL}/api/preauthorizationrequest/`               
     },
     
     // Service Type endpoints
